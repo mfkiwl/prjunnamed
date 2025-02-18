@@ -155,7 +155,17 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="building-from-source"><a class="header" href="#building-from-source">Building from Source</a></h1>
+                        <h2 id="building-from-source"><a class="header" href="#building-from-source">Building from source</a></h2>
+<p>In order to build Project Unnamed and run its testsuite, you will need <a href="https://rust-lang.org/">Rust</a> (latest stable release) and <a href="https://github.com/Z3Prover/z3">Z3</a>. We recommend using <a href="https://rustup.rs/">rustup</a> or installing Rust from the software repository of your Linux distribution. Once you have these tools, run:</p>
+<pre><code class="language-console">$ cargo test
+</code></pre>
+<p>We use <a href="https://rust-lang.github.io/rustfmt/">rustfmt</a> to ensure consistent formatting of the entire codebase. Prior to sending a pull request, run:</p>
+<pre><code class="language-console">$ cargo fmt
+</code></pre>
+<p>In order to build the documentation, you will need <a href="https://rust-lang.github.io/mdBook/guide/installation.html">mdbook</a> (which can be installed in a number of ways including via <a href="https://rustup.rs/">rustup</a>). Once you have it, run:</p>
+<pre><code class="language-console">$ mdbook serve docs
+</code></pre>
+<p>The documentation will be accessible in a browser at <a href="http://localhost:3000">http://localhost:3000</a>.</p>
 
                     </main>
 
