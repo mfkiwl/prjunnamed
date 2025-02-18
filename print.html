@@ -159,8 +159,17 @@
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p><a href="https://github.com/prjunnamed/prjunnamed">Project Unnamed</a> aims to deliver a comprehensive end-to-end FPGA synthesis, placement, routing, and bitstream generation tools targeting multiple FPGA families and integrating with <a href="https://github.com/prjunnamed/prjcombine">Project Combine</a>.</p>
 <p>The project is currently in the early stage of research and prototyping, and is not suitable for general use.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="language-reference"><a class="header" href="#language-reference">Language Reference</a></h1>
-<p>Project Unnamed is based around an <a href="https://en.wikipedia.org/wiki/Intermediate_representation">intermediate representation</a>: a kind of human readable and writable (primarily by compiler developers) programming language designed for convenience of implementing transformations. These transformations include optimization, technology mapping, verification, and more.</p>
+<h2 id="community"><a class="header" href="#community">Community</a></h2>
+<p>Project Unnamed has a dedicated IRC channel, <a href="https://web.libera.chat/#prjunnamed">#prjunnamed at libera.chat</a>, which is <em>bridged</em><sup class="footnote-reference"><a href="#1">1</a></sup> to Matrix at <a href="https://matrix.to/#/#prjunnamed:catircservices.org">#prjunnamed:catircservices.org</a>. Feel free to join to discuss ongoing development of Project Unnamed and its related projects.</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>The same messages appear on IRC and on Matrix, and one can participate in the discussion equally using either communication system.</p>
+</div>
+<h2 id="license"><a class="header" href="#license">License</a></h2>
+<p>Project Unnamed is distributed under the terms of the <a href="LICENSE-0BSD.txt">0-clause BSD license</a> and the <a href="LICENSE-Apache-2.0.txt">Apache License (Version 2.0)</a>.</p>
+<p>By submitting your contribution you agree to be bound by all provisions of both of these licenses, including the clause 3 (Grant of Patent License) of the Apache License (Version 2.0).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="building-from-source"><a class="header" href="#building-from-source">Building from Source</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="language-reference"><a class="header" href="#language-reference">Language reference</a></h1>
+<p>Project Unnamed is based around an <a href="https://en.wikipedia.org/wiki/Intermediate_representation">intermediate representation</a>: a kind of compiler developer readable and writable programming language designed for convenience of implementing transformations. These transformations include optimization, technology mapping, verification, and more.</p>
 <p>The Project Unnamed intermediate representation is called "Unnamed IR", and it has two forms: the in-memory form composed out of the data structures in the <a href="dev//api/prjunnamed_netlist/">prjunnamed-netlist</a> crate, and the text form described in this document. The text form is a part of the public interface, and incompatible changes to it are considered breaking changes to Project Unnamed itself.</p>
 <div class="warning">
 <p>This document is incomplete.</p>
@@ -233,7 +242,7 @@ XXXX
 <p>Constants denote bit vectors with some positions being "don't care" or "undefined" (depending on the context), and are written in the usual order where the most significant position is on the left. That is, <code>1010</code> has the numeric value 10 decimal, its first bit is <code>0</code> and last bit is <code>1</code>.</p>
 <p>Constants are not interchangeable with <a href="dev/langref.html#decimal">decimal numbers</a>; where both are accepted, the meaning of the syntactic construct differs between the two.</p>
 <h3 id="metadata"><a class="header" href="#metadata">Metadata identifiers</a></h3>
-<pre><code>!&lt;digits&gt;
+<pre><code>!&lt;index&gt;
 </code></pre>
 <p>For example:</p>
 <pre><code>!0
@@ -279,7 +288,7 @@ XXXX
 <p>While the in-memory IR has the property that a cell with a wide output occupies a contiguous range of cell indices (i.e. that <code>%0+1</code> and <code>%1</code> always refer to the same net), the same is not true in the text IR. Instead, each unique <code>&lt;index&gt;</code> can refer to a distinct cell with an output of any width.</p>
 <p>To avoid confusion, the IR printer ensures that in references, <code>&lt;index&gt;</code> is equal to the lowest index occupied by a cell with a wide output (i.e. it will never format <code>%0+1</code> as <code>%1</code>).</p>
 </div>
-<h3 id="repeat"><a class="header" href="#repeat">Repetition</a></h3>
+<h3 id="repeat"><a class="header" href="#repeat">Repetitions</a></h3>
 <pre><code>&lt;value&gt;*&lt;count&gt;
 </code></pre>
 <p>For example:</p>
@@ -320,6 +329,82 @@ set target "siliconblue" "device"="ice40up5k" "dsp"="off"
 </code></pre>
 <p>The target specification defines the specific device for which the netlist is intended, as well as target-specific configuration options for the flow. The <code>&lt;target&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;value&gt;</code> are all <a href="dev/langref.html#string">strings</a> that are passed to the <a href="dev//api/prjunnamed_netlist/fn.register_target.html">builder function</a> as-is.</p>
 <h2 id="decls"><a class="header" href="#decls">Declarations</a></h2>
+<p><em>Declarations</em> are syntactic constructs that, taken together, describe the entire netlist. There are two kinds of declarations: <em>metadata declarations</em> and <em>cell declarations</em>.</p>
+<p>The general structure of a declaration is:</p>
+<pre><code>&lt;ident&gt; = &lt;keyword&gt; &lt;operand&gt;...
+</code></pre>
+<p>For example:</p>
+<pre><code>!1 = ident "clk" in=!0
+%0:1 = input "clk" !2
+</code></pre>
+<p>In the snippet above, <code>!1</code> and <code>%0:1</code> are identifiers <em>introduced</em> by the declaration, <code>ident</code> and <code>input</code> are <em>keywords</em>, and <code>"clk"</code>, <code>in=!0</code>, and <code>!2</code> are <em>operands</em>.</p>
+<p>A <a href="dev/langref.html#metadata">metadata identifier</a> can only reference a metadata declaration introduced at an earlier point in the file. In contrast, a <a href="dev/langref.html#cell">cell identifier</a> can reference a cell declaration introduced anywhere in the file, including by the cell declaration it is an operand of.</p>
+<h3 id="metadata-decls"><a class="header" href="#metadata-decls">Metadata declarations</a></h3>
+<p>Metadata declarations correspond to the <a href="dev//api/prjunnamed_netlist/enum.MetaItem.html">enum prjunnamed_netlist::MetaItem</a>.</p>
+<div class="warning">
+<p>The names that occur within metadata are opaque: they must not be examined by the tools for any reason other than communicating it to the user or to other tools.</p>
+<p>In particular, it is forbidden to interpret names with certain suffixes such as <code>inst[0]</code> or <code>wire[2:0]</code> in a special way. If necessary, this may be done prior to generating Unnamed IR.</p>
+</div>
+<h4 id="metadata-set"><a class="header" href="#metadata-set">Metadata sets</a></h4>
+<pre><code>!&lt;decl&gt; = { !&lt;ref&gt; !&lt;ref&gt;... }
+</code></pre>
+<p>For example:</p>
+<pre><code>!10 = { !2 !3 }
+!11 = { !2 !3 !4 }
+</code></pre>
+<p><em>Metadata sets</em> are used to group multiple pieces of metadata to be referenced in <a href="dev/langref.html#cell-decls">cell declarations</a> with a single index.</p>
+<p>A metadata set with less than two elements is ill-formed. A metadata set that refers to another metadata set is ill-formed.</p>
+<h4 id="metadata-source"><a class="header" href="#metadata-source">Source metadata</a></h4>
+<pre><code>!&lt;decl&gt; = source "&lt;file&gt;" (#&lt;start-line&gt; #&lt;start-col&gt;) (#&lt;end-line&gt; #&lt;end-col&gt;)
+</code></pre>
+<p>For example:</p>
+<pre><code>!1 = source "/home/whitequark/design/top.py" (#20 #4) (#20 #10)
+</code></pre>
+<p><em>Source metadata</em> is used to refer to a contiguous possibly empty range of characters within a source file.</p>
+<p>The <code>"&lt;file&gt;"</code> <a href="dev/langref.html#string">string</a> is an environment specific location of a source file, which may be absolute or relative. It cannot be empty, or the declaration is ill-formed.</p>
+<p>The <code>#&lt;start-line&gt;</code> and <code>#&lt;start-col&gt;</code> <a href="dev/langref.html#decimal">decimal numbers</a> are zero-based non-negative indices into the contents of <code>"&lt;file&gt;"</code>, where <code>#&lt;start-line&gt;</code> is the number of <code>U+000A LINE FEED</code> characters before the start of the range, and <code>#&lt;start-col&gt;</code> is the number of the Unicode code points after the last <code>U+000A LINE FEED</code> character and before the beginning of the range.</p>
+<p>The <code>#&lt;end-line&gt;</code> and <code>#&lt;end-col&gt;</code> <a href="dev/langref.html#decimal">decimal numbers</a> are zero-based non-negative indices defined in the same way, except they point to the end of the range. The index <code>#&lt;end-line&gt;</code> cannot be less than <code>#&lt;start-line&gt;</code>, and if the two are equal, the index <code>#&lt;end-col&gt;</code> cannot be less than <code>#&lt;start-col&gt;</code>, or the declaration is ill-formed.</p>
+<p>If the IR generator does not have access to accurate location information, the range may be left empty. If only line number information is available, the range should be specified as <code>(#&lt;line&gt; #0) (#&lt;line&gt; #0)</code>.</p>
+<h4 id="metadata-scope"><a class="header" href="#metadata-scope">Scope metadata</a></h4>
+<pre><code>!&lt;decl&gt; = scope "&lt;name&gt;" in=!&lt;parent&gt; src=!&lt;source&gt;
+!&lt;decl&gt; = scope #&lt;index&gt; in=!&lt;parent&gt; src=!&lt;source&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>!10 = scope "top"
+!11 = scope "cpu" in=!10
+!12 = scope "alu" in=!11 src=!0
+!13 = scope "io" src=!1
+!14 = scope #0 in=!13
+!14 = scope #1 in=!13 src=!2
+</code></pre>
+<p><em>Scope metadata</em> is used to describe a hierarchy of regions within the source code. The nature of a region is not constrained here, and includes without limitation: modules, conditional blocks, instance declarations, and so on. By traversing the chain of scope metadata, it should be possible for tools like timing analyzers, source level debuggers, and so on to be able to unambiguously locate a declaration by its hierarchical name.</p>
+<p>There are two kinds of scopes: <em>named scopes</em> and <em>indexed scopes</em>. Indexed scopes typically correspond to source-level declarations of arrays, whereas named scopes correspond to any other source-level declarations. Negative indices are accepted for indexed scopes.</p>
+<p>Hierarchy arises when a scope is declared to be a part of another scope using the optional <code>in=!&lt;parent&gt;</code> operand. The <code>!&lt;parent&gt;</code> <a href="dev/langref.html#metadata">metadata identifier</a> must refer to scope metadata, or the declaration is ill-formed.</p>
+<p>A scope may have a <a href="dev/langref.html#metadata-source">source location</a> attached using the optional <code>src=!&lt;source&gt;</code> operand. The <code>!&lt;source&gt;</code> <a href="dev/langref.html#metadata">metadata identifier</a> must refer to source metadata, or the declaration is ill-formed.</p>
+<p>If the <code>"&lt;name&gt;"</code> <a href="dev/langref.html#string">string</a> is empty, the declaration is ill-formed.</p>
+<h4 id="metadata-ident"><a class="header" href="#metadata-ident">Identifier metadata</a></h4>
+<pre><code>!&lt;decl&gt; = ident "&lt;name&gt;" in=!&lt;scope&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>!1 = ident "clk" in=!0
+</code></pre>
+<p><em>Identifier metadata</em> is used to refer to a specific declaration within an elaborated hierarchy. The full hierarchical name is obtained by collecting the names or indices while recursively traversing <a href="dev/langref.html#metadata-scope">scope metadata</a> referenced by the <code>!&lt;scope&gt;</code> <a href="dev/langref.html#metadata">metadata identifier</a> and appending the <code>"&lt;name&gt;"</code> <a href="dev/langref.html#string">string</a> at the end.</p>
+<p>If the <code>"&lt;name&gt;"</code> is empty, or the <code>!&lt;scope&gt;</code> does not refer to scope metadata, the declaration is ill-formed.</p>
+<h4 id="metadata-attr"><a class="header" href="#metadata-attr">Attribute metadata</a></h4>
+<pre><code>!&lt;decl&gt; = attr "&lt;name&gt;" &lt;const&gt;
+!&lt;decl&gt; = attr "&lt;name&gt;" #&lt;int&gt;
+!&lt;decl&gt; = attr "&lt;name&gt;" "&lt;string&gt;"
+</code></pre>
+<p>For example:</p>
+<pre><code>!0 = attr "top" #1
+!1 = attr "PIN_TYPE" 110000
+!2 = attr "BEL" "X0/Y1"
+</code></pre>
+<p><em>Attribute metadata</em> is used to encapsulate source-level attributes that are not otherwise recognized by the target-independent or target-specific parts of the flow. An attribute has a <code>"&lt;name&gt;"</code> <a href="dev/langref.html#string">string</a> and a payload. There are three possible types of payloads: <a href="dev/langref.html#constant">constants</a>, <a href="dev/langref.html#decimal">integers</a>, and <a href="dev/langref.html#string">strings</a>.</p>
+<p>Attribute metadata is strongly typed: the tools preserve the type of the payload and ensure it matches the expected type whenever the payload is examined.</p>
+<p>If the <code>"&lt;name&gt;"</code> is empty, the declaration is ill-formed.</p>
+<h3 id="cell-decls"><a class="header" href="#cell-decls">Cell declarations</a></h3>
+<p>Cell declarations correspond to the <a href="dev//api/prjunnamed_netlist/enum.Cell.html">enum prjunnamed_netlist::Cell</a>.</p>
 <p>To be written.</p>
 
                     </main>

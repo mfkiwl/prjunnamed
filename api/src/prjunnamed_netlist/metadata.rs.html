@@ -432,7 +432,19 @@
 <a href="#431" id="431">431</a>
 <a href="#432" id="432">432</a>
 <a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a></pre></div><pre class="rust"><code><span class="doccomment">//! Metadata storage.
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a></pre></div><pre class="rust"><code><span class="doccomment">//! Metadata storage.
 //!
 //! This module is intentionally tightly coupled to `crate::design`, and intentionally avoids exporting any APIs that
 //! expose indices. The exported APIs are based on [`MetaStringRef`] and [`MetaItemRef`], which parallel [`CellRef`].
@@ -470,6 +482,7 @@
     </span><span class="prelude-val">None</span>,
     <span class="doccomment">/// Multiple metadata items.
     /// The purpose of this variant is to make collections of metadata indices take less memory.
+    /// A metadata set cannot contain less than two metadata items.
     </span>Set(BTreeSet&lt;MetaItemRef&lt;<span class="lifetime">'a</span>&gt;&gt;),
     <span class="doccomment">/// Source location.
     </span>Source {
@@ -481,7 +494,8 @@
         </span>end: Position,
     },
     <span class="doccomment">/// Scope identified by a name.
-    /// A top-level named scope could be a module declaration. A named scope with a parent could be a block
+    /// A top-level named scope could be a module declaration. A named scope with a parent could be a block within
+    /// a module.
     </span>NamedScope {
         <span class="doccomment">/// Name.  Must not be empty.
         </span>name: MetaStringRef&lt;<span class="lifetime">'a</span>&gt;,
@@ -583,42 +597,52 @@
         <span class="kw">match </span><span class="self">self </span>{
             MetaItem::None =&gt; (),
             MetaItem::Set(items) =&gt; {
-                <span class="macro">assert!</span>(items.len() &gt; <span class="number">1</span>, <span class="string">"Set must contain more than one element"</span>);
+                <span class="macro">assert!</span>(items.len() &gt; <span class="number">1</span>, <span class="string">"MetaItem::Set must contain more than one element"</span>);
                 <span class="kw">for </span>item <span class="kw">in </span>items {
                     <span class="macro">assert!</span>(
                         !<span class="macro">matches!</span>(<span class="kw-2">&amp;*</span>item.get_repr(), MetaItemRepr::None | MetaItemRepr::Set(..)),
-                        <span class="string">"Set item must not be None or another Set"
+                        <span class="string">"MetaItem::Set item must not be MetaItem::None or another MetaItem::Set"
                     </span>)
                 }
             }
-            MetaItem::Source { file, start: <span class="kw">_</span>, end: <span class="kw">_ </span>} =&gt; {
-                <span class="macro">assert!</span>(!file.get().is_empty(), <span class="string">"Source must have a file"</span>);
+            MetaItem::Source { file, start, end } =&gt; {
+                <span class="macro">assert!</span>(!file.get().is_empty(), <span class="string">"MetaItem::Source must have a file"</span>);
+                <span class="macro">assert!</span>(
+                    end.line &gt; start.line || (end.line == start.line &amp;&amp; end.column &gt;= start.column),
+                    <span class="string">"MetaItem::Source must specify a range in non-descending order"
+                </span>);
             }
             MetaItem::NamedScope { name: <span class="kw">_</span>, source, parent } | MetaItem::IndexedScope { index: <span class="kw">_</span>, source, parent } =&gt; {
                 <span class="kw">if let </span>MetaItem::NamedScope { name, .. } = <span class="self">self </span>{
-                    <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"NamedScope must have a name"</span>);
+                    <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"MetaItem::NamedScope must have a name"</span>);
                 }
                 <span class="macro">assert!</span>(
                     <span class="macro">matches!</span>(<span class="kw-2">&amp;*</span>source.get_repr(), MetaItemRepr::None | MetaItemRepr::Source { .. }),
-                    <span class="string">"source of a scope must be None or Source"
-                </span>);
+                    <span class="macro">concat!</span>(
+                        <span class="string">"source of a MetaItem::NamedScope or MetaItem::IndexedScope must be "</span>,
+                        <span class="string">"MetaItem::None or MetaItem::Source"
+                    </span>)
+                );
                 <span class="macro">assert!</span>(
                     <span class="macro">matches!</span>(
                         <span class="kw-2">&amp;*</span>parent.get_repr(),
                         MetaItemRepr::None | MetaItemRepr::NamedScope { .. } | MetaItemRepr::IndexedScope { .. }
                     ),
-                    <span class="string">"parent of a scope must be None, NamedScope, or IndexedScope"
-                </span>);
+                    <span class="macro">concat!</span>(
+                        <span class="string">"parent of a MetaItem::NamedScope or MetaItem::IndexedScope must be "</span>,
+                        <span class="string">"MetaItem::None, MetaItem::NamedScope, or MetaItem::IndexedScope"
+                    </span>)
+                );
             }
             MetaItem::Ident { name, scope } =&gt; {
-                <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"Ident must have a name"</span>);
+                <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"MetaItem::Ident must have a name"</span>);
                 <span class="macro">assert!</span>(
                     <span class="macro">matches!</span>(<span class="kw-2">&amp;*</span>scope.get_repr(), MetaItemRepr::NamedScope { .. } | MetaItemRepr::IndexedScope { .. }),
-                    <span class="string">"scope of an Ident must be NamedScope, or IndexedScope"
+                    <span class="string">"scope of a MetaItem::Ident must be MetaItem::NamedScope or MetaItem::IndexedScope"
                 </span>);
             }
             MetaItem::Attr { name, value: <span class="kw">_ </span>} =&gt; {
-                <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"Attr must have a name"</span>);
+                <span class="macro">assert!</span>(!name.get().is_empty(), <span class="string">"MetaItem::Attr must have a name"</span>);
             }
         }
     }
