@@ -707,7 +707,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_string(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, str: <span class="kw-2">&amp;</span>str) -&gt; std::fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"\""</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>byte <span class="kw">in </span>str.as_bytes() {
-            <span class="kw">if </span>(byte.is_ascii_graphic() || <span class="macro">matches!</span>(byte, <span class="string">b' ' </span>| <span class="string">b'\t'</span>)) &amp;&amp; <span class="kw-2">*</span>byte != <span class="string">b'"' </span>{
+            <span class="kw">if </span>(byte.is_ascii_graphic() || <span class="macro">matches!</span>(byte, <span class="string">b' ' </span>| <span class="string">b'\t'</span>)) &amp;&amp; ![<span class="string">b'\\'</span>, <span class="string">b'"'</span>].contains(byte) {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="kw-2">*</span>byte <span class="kw">as </span>char)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 <span class="macro">assert!</span>(byte.is_ascii());

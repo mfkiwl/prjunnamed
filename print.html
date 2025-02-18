@@ -206,6 +206,7 @@
 "\5cescaped"
 </code></pre>
 <p><em>Strings</em> are delimited by <code>"</code> on both ends and denote byte sequences (not character sequences). Within a string, <code>\</code> followed by two hexadecimal digits <code>0</code>..<code>9</code> or <code>a</code>..<code>f</code> (lowercase only) corresponds to that particular byte, and any other character corresponds to its unique <a href="https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-2/#G11165">UTF-8</a> encoding. No normalization is performed.</p>
+<p>A string containing a <code>\</code> followed by two characters that are not hexadecimal digits is ill-formed.</p>
 <h3 id="decimal"><a class="header" href="#decimal">Decimal numbers</a></h3>
 <pre><code>#&lt;digits&gt;
 </code></pre>
