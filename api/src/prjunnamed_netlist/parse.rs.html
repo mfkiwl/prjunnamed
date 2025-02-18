@@ -1232,7 +1232,7 @@
 }
 
 <span class="kw">fn </span>parse_keyword(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>name: String = t.take_while(|c| c.is_ascii_alphanumeric() || <span class="macro">matches!</span>(c, <span class="string">'_' </span>| <span class="string">'&gt;'</span>)).collect();
+    <span class="kw">let </span>name: String = t.take_while(|c| c.is_ascii_alphanumeric() || <span class="macro">matches!</span>(c, <span class="string">'_' </span>| <span class="string">'/'</span>)).collect();
     <span class="kw">if </span>name.is_empty() {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
@@ -1632,8 +1632,8 @@
     <span class="kw">fn </span>parse_reset_over_enable_arg(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;bool&gt; {
         parse_blank(t);
         <span class="macro">one_of!</span>(t;
-            parse_keyword(t).filter(|kw| kw == <span class="string">"rst&gt;en"</span>).map(|<span class="kw">_</span>| <span class="bool-val">true</span>),
-            parse_keyword(t).filter(|kw| kw == <span class="string">"en&gt;rst"</span>).map(|<span class="kw">_</span>| <span class="bool-val">false</span>),
+            parse_keyword(t).filter(|kw| kw == <span class="string">"rst/en"</span>).map(|<span class="kw">_</span>| <span class="bool-val">true</span>),
+            parse_keyword(t).filter(|kw| kw == <span class="string">"en/rst"</span>).map(|<span class="kw">_</span>| <span class="bool-val">false</span>),
         )
     }
 

@@ -1077,9 +1077,9 @@
                 }
                 <span class="kw">if </span>flip_flop.has_reset() &amp;&amp; flip_flop.has_enable() {
                     <span class="kw">if </span>flip_flop.reset_over_enable {
-                        <span class="macro">write!</span>(f, <span class="string">" rst&gt;en"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(f, <span class="string">" rst/en"</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="macro">write!</span>(f, <span class="string">" en&gt;rst"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(f, <span class="string">" en/rst"</span>)<span class="question-mark">?</span>;
                     }
                 }
                 <span class="kw">if </span>flip_flop.has_init_value() {
@@ -1125,9 +1125,9 @@
                         }
                         <span class="kw">if </span>flip_flop.has_reset() &amp;&amp; flip_flop.has_enable() {
                             <span class="kw">if </span>flip_flop.reset_over_enable {
-                                <span class="macro">write!</span>(f, <span class="string">" rst&gt;en"</span>)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(f, <span class="string">" rst/en"</span>)<span class="question-mark">?</span>;
                             } <span class="kw">else </span>{
-                                <span class="macro">write!</span>(f, <span class="string">" en&gt;rst"</span>)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(f, <span class="string">" en/rst"</span>)<span class="question-mark">?</span>;
                             }
                         }
                         <span class="kw">if </span>flip_flop.has_init_value() {
