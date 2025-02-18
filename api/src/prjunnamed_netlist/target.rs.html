@@ -546,7 +546,10 @@
 <a href="#545" id="545">545</a>
 <a href="#546" id="546">546</a>
 <a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::error::Error;
 <span class="kw">use </span>std::collections::BTreeMap;
@@ -605,6 +608,9 @@
         <span class="kw">match </span>(<span class="self">self</span>, value) {
             (TargetParamKind::Bits(width), ParamValue::Const(value)) <span class="kw">if </span>value.len() == <span class="kw-2">*</span>width =&gt; {
                 <span class="prelude-val">Some</span>(ParamValue::Const(value.clone()))
+            }
+            (TargetParamKind::Bits(width), ParamValue::Int(value)) <span class="kw">if </span><span class="kw-2">*</span>value &gt;= <span class="number">0 </span>&amp;&amp; <span class="kw-2">*</span>value &lt; <span class="number">1 </span>&lt;&lt; <span class="kw-2">*</span>width =&gt; {
+                <span class="prelude-val">Some</span>(ParamValue::Const(Const::from_uint((<span class="kw-2">*</span>value).try_into().unwrap(), <span class="kw-2">*</span>width)))
             }
             (TargetParamKind::Bool, ParamValue::Int(value)) =&gt; <span class="kw">match </span><span class="kw-2">*</span>value {
                 <span class="number">1 </span>=&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::ones(<span class="number">1</span>))),
