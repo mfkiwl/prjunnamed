@@ -1069,7 +1069,20 @@
 <a href="#1068" id="1068">1068</a>
 <a href="#1069" id="1069">1069</a>
 <a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
 
 <span class="kw">use </span>yap::{one_of, types::WithContext, IntoTokens, TokenLocation, Tokens};
 
@@ -1175,10 +1188,23 @@
 
 <span class="attr">#[must_use]
 </span><span class="kw">fn </span>parse_symbol(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;, symbol: char) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
+    <span class="macro">debug_assert!</span>(symbol != <span class="string">'\n'</span>, <span class="string">"use parse_newline()"</span>);
     <span class="kw">if </span>!t.token(symbol) {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
     <span class="prelude-val">Some</span>(())
+}
+
+<span class="attr">#[must_use]
+</span><span class="kw">fn </span>parse_newline(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
+    <span class="kw">if </span><span class="macro">one_of!</span>(t;
+        t.token(<span class="string">'\n'</span>),
+        t.token(<span class="string">'\r'</span>) &amp;&amp; t.token(<span class="string">'\n'</span>)
+    ) {
+        <span class="prelude-val">Some</span>(())
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
 <span class="kw">fn </span>parse_decimal&lt;T: FromStr&gt;(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
@@ -1424,7 +1450,7 @@
         }
     }
     parse_blank(t);
-    parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+    parse_newline(t)<span class="question-mark">?</span>;
     <span class="kw">let </span>context = t.context_mut();
     <span class="kw">if </span>!context.design.is_empty() {
         <span class="macro">panic!</span>(<span class="string">"target specification must come before any definitions"</span>);
@@ -1550,7 +1576,7 @@
         parse_metadata_attr(t),
     )<span class="question-mark">?</span>;
     parse_blank(t);
-    parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+    parse_newline(t)<span class="question-mark">?</span>;
     t.context_mut().add_meta(index, item_index);
     <span class="prelude-val">Some</span>(())
 }
@@ -1558,7 +1584,7 @@
 <span class="kw">fn </span>parse_io(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;IoValue&gt; {
     <span class="kw">let </span>(name, size) = parse_io_name_size(t)<span class="question-mark">?</span>;
     parse_blank(t);
-    parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+    parse_newline(t)<span class="question-mark">?</span>;
     <span class="kw">let </span>ctx = t.context_mut();
     <span class="kw">let </span>io_value = ctx.add_io(name, size);
     ctx.design.apply();
@@ -1702,7 +1728,7 @@
         parse_blank(t);
         parse_symbol(t, <span class="string">'{'</span>)<span class="question-mark">?</span>;
         parse_blank(t);
-        parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+        parse_newline(t)<span class="question-mark">?</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(()) = t.optional(|t| {
             parse_blank(t);
             <span class="macro">one_of!</span>(t;
@@ -1725,7 +1751,7 @@
                     <span class="macro">assert!</span>(instance.ios.insert(name, io_value).is_none(), <span class="string">"duplicate IO name in instance"</span>))
             );
             parse_blank(t);
-            parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+            parse_newline(t)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(())
         }) {}
         parse_blank(t);
@@ -1850,7 +1876,7 @@
         parse_blank(t);
         parse_symbol(t, <span class="string">'{'</span>)<span class="question-mark">?</span>;
         parse_blank(t);
-        <span class="kw">let _ </span>= parse_symbol(t, <span class="string">'\n'</span>);
+        <span class="kw">let _ </span>= parse_newline(t);
         <span class="kw">while let </span><span class="prelude-val">Some</span>(()) = t.optional(|t| {
             parse_blank(t);
             <span class="kw">let </span><span class="kw-2">mut </span>alternates = Vec::new();
@@ -1866,7 +1892,7 @@
                 alternates.push(parse_const(t)<span class="question-mark">?</span>);
             }
             parse_blank(t);
-            <span class="kw">let _ </span>= parse_symbol(t, <span class="string">'\n'</span>);
+            <span class="kw">let _ </span>= parse_newline(t);
             patterns.push(alternates);
             <span class="prelude-val">Some</span>(())
         }) {}
@@ -1973,7 +1999,7 @@
         parse_blank(t);
         parse_symbol(t, <span class="string">'{'</span>)<span class="question-mark">?</span>;
         parse_blank(t);
-        parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+        parse_newline(t)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>init_value = Const::new();
         <span class="kw">let </span><span class="kw-2">mut </span>write_ports = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>read_ports = Vec::new();
@@ -1992,7 +2018,7 @@
                 }),
             );
             parse_blank(t);
-            parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+            parse_newline(t)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(())
         }) {}
         parse_blank(t);
@@ -2091,7 +2117,7 @@
         parse_other_cell(t),
     )<span class="question-mark">?</span>;
     parse_blank(t);
-    parse_symbol(t, <span class="string">'\n'</span>)<span class="question-mark">?</span>;
+    parse_newline(t)<span class="question-mark">?</span>;
     <span class="prelude-val">Some</span>(())
 }
 
@@ -2102,7 +2128,7 @@
         parse_metadata(t).is_some(),
         parse_io(t).is_some(),
         parse_cell(t).is_some(),
-        t.token(<span class="string">'\n'</span>)
+        parse_newline(t).is_some()
     )
 }
 
