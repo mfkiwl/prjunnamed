@@ -127,6 +127,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/prjunnamed/prjunnamed" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -157,6 +160,165 @@
 <p><a href="https://github.com/prjunnamed/prjunnamed">Project Unnamed</a> aims to deliver a comprehensive end-to-end FPGA synthesis, placement, routing, and bitstream generation tools targeting multiple FPGA families and integrating with <a href="https://github.com/prjunnamed/prjcombine">Project Combine</a>.</p>
 <p>The project is currently in the early stage of research and prototyping, and is not suitable for general use.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="language-reference"><a class="header" href="#language-reference">Language Reference</a></h1>
+<p>Project Unnamed is based around an <a href="https://en.wikipedia.org/wiki/Intermediate_representation">intermediate representation</a>: a kind of human readable and writable (primarily by compiler developers) programming language designed for convenience of implementing transformations. These transformations include optimization, technology mapping, verification, and more.</p>
+<p>The Project Unnamed intermediate representation is called "Unnamed IR", and it has two forms: the in-memory form composed out of the data structures in the <a href="dev//api/prjunnamed_netlist/">prjunnamed-netlist</a> crate, and the text form described in this document. The text form is a part of the public interface, and incompatible changes to it are considered breaking changes to Project Unnamed itself.</p>
+<div class="warning">
+<p>This document is incomplete.</p>
+</div>
+<h2 id="typography"><a class="header" href="#typography">Typographical conventions</a></h2>
+<p>The examples of the text IR in this document include placeholders delimited by the <code>&lt;</code> and <code>&gt;</code> characters. These characters are only used to denote placeholders, and do not appear in the syntax of the text IR itself. For example:</p>
+<pre><code>%&lt;cell-idx&gt;:&lt;width&gt; = and &lt;a&gt; &lt;b&gt;
+</code></pre>
+<p>The snippet above describes the syntax of the <code>and</code> cell, including the fixed elements (the percent, colon, and equals characters, and the <code>add</code> keyword) and the variable elements (cell index <code>&lt;cell-idx&gt;</code>, output width <code>&lt;width&gt;</code>, arguments <code>&lt;a&gt;</code> and <code>&lt;b&gt;</code>).</p>
+<p>Whenever a syntactic element is followed by the <code>...</code> characters, it means that it can be repeated an arbitrary amount of times, with the repetitions delimited by <a href="dev/langref.html#whitespace">whitespace</a>. For example:</p>
+<pre><code>[ &lt;part&gt;... ]
+</code></pre>
+<p>The snippet above describes the syntax of a <a href="dev/langref.html#concat">concatenation</a>, where it is equivalent to any of the following:</p>
+<pre><code>[]
+[&lt;part&gt;]
+[ &lt;part&gt; &lt;part&gt; ]
+</code></pre>
+<p>And so on.</p>
+<h2 id="general"><a class="header" href="#general">General principles</a></h2>
+<p>The text IR is designed for ease of reading of large, unstructured netlists, and for ease of writing or generating them, in that order. It is partly inspired by the well-known <a href="https://llvm.org/docs/LangRef.html">LLVM IR</a>.</p>
+<p>All introduced identifiers are namespaced, with the namespace indicated by a sigil (a prefix character like <code>!</code> or <code>%</code>). For identifiers that refer to objects that can be referenced in part, each reference unambiguously indicates the size of the partial reference so that it is not necessary to consult the declaration to find it out.</p>
+<h2 id="lexical"><a class="header" href="#lexical">Lexical structure</a></h2>
+<p>The text IR has a conservative lexical structure, where the first character of a non-whitespace sequence of characters determines its lexical category.</p>
+<p>The byte encoding of the text IR is always <a href="https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-2/#G11165">UTF-8</a>.</p>
+<h3 id="whitespace"><a class="header" href="#whitespace">Whitespace</a></h3>
+<p>The only characters recognized as whitespace are <code>U+0020 SPACE</code>, <code>U+0009 CHARACTER TABULATION</code>, and <code>U+000A LINE FEED</code>. All of them may be used for separating other tokens, and <code>U+000A LINE FEED</code> is used to indicate the end of a syntactic construct. The file must end with a <code>U+000A LINE FEED</code> character.</p>
+<p>A <code>U+000D CARRIAGE RETURN</code> character followed by a <code>U+000A LINE FEED</code> character is treated as the latter character alone.</p>
+<div class="warning">
+<p>The <a href="dev//api/prjunnamed_netlist/">prjunnamed-netlist</a> parser currently handles whitespace in a questionable and inconsistent way. This will be fixed in the future.</p>
+</div>
+<h3 id="comment"><a class="header" href="#comment">Comments</a></h3>
+<pre><code>;&lt;text&gt;
+</code></pre>
+<p><em>Comments</em> are sequences of characters starting with <code>;</code> and ending with <code>U+000A LINE FEED</code>. They are treated the same as a <code>U+000A LINE FEED</code> character.</p>
+<h3 id="string"><a class="header" href="#string">Strings</a></h3>
+<pre><code>"&lt;bytes&gt;"
+</code></pre>
+<p>For example:</p>
+<pre><code>""
+"meow"
+"this\0ais a anewline"
+"\22quoted\22"
+"\5cescaped"
+</code></pre>
+<p><em>Strings</em> are delimited by <code>"</code> on both ends and denote byte sequences (not character sequences). Within a string, <code>\</code> followed by two hexadecimal digits <code>0</code>..<code>9</code> or <code>a</code>..<code>f</code> (lowercase only) corresponds to that particular byte, and any other character corresponds to its unique <a href="https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-2/#G11165">UTF-8</a> encoding. No normalization is performed.</p>
+<h3 id="decimal"><a class="header" href="#decimal">Decimal numbers</a></h3>
+<pre><code>#&lt;digits&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>#0
+#10
+#-1
+</code></pre>
+<p><em>Decimal numbers</em> start with a <code>#</code> sigil, followed by an optional <code>-</code> sign and a non-empty sequence of <code>0</code>..<code>9</code> digits. No whitespace is allowed between any of the characters.</p>
+<p>In some contexts, only non-negative decimal numbers, or decimal numbers up to a certain magnitude, may be accepted.</p>
+<p>Decimal numbers are not interchangeable with <a href="dev/langref.html#constant">constants</a>; where both are accepted, the meaning of the syntactic construct differs between the two.</p>
+<h3 id="constant"><a class="header" href="#constant">Constants</a></h3>
+<pre><code>&lt;trits&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>0
+1
+X
+100
+1XX0
+XXXX
+</code></pre>
+<p><em>Constants</em> are made up of <code>0</code>, <code>1</code>, and <code>X</code> (uppercase only) characters. No whitespace is allowed between any of the characters.</p>
+<p>Constants denote bit vectors with some positions being "don't care" or "undefined" (depending on the context), and are written in the usual order where the most significant position is on the left. That is, <code>1010</code> has the numeric value 10 decimal, its first bit is <code>0</code> and last bit is <code>1</code>.</p>
+<p>Constants are not interchangeable with <a href="dev/langref.html#decimal">decimal numbers</a>; where both are accepted, the meaning of the syntactic construct differs between the two.</p>
+<h3 id="metadata"><a class="header" href="#metadata">Metadata identifiers</a></h3>
+<pre><code>!&lt;digits&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>!0
+!15
+</code></pre>
+<p><em>Metadata identifiers</em> start with a <code>!</code> sigil followed by a non-empty sequence of <code>0</code>..<code>9</code> digits, where leading <code>0</code> digits are insignificant. No whitespace is allowed between any of the characters.</p>
+<h3 id="io"><a class="header" href="#io">I/O identifiers</a></h3>
+<pre><code>&amp;&lt;string&gt;
+&amp;&lt;string&gt;:&lt;width&gt;
+&amp;&lt;string&gt;+&lt;offset&gt;
+&amp;_
+&amp;_:&lt;width&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>&amp;"pin"
+&amp;"gpio":8
+&amp;"gpio"+3
+&amp;_
+&amp;_:16
+</code></pre>
+<p><em>I/O identifiers</em> start with a <code>&amp;</code> sigil followed by a non-empty <a href="dev/langref.html#string">string</a> (in which case the I/O identifier is <em>named</em>) or a <code>_</code> character (in which case it is <em>floating</em>). No whitespace is allowed between the sigil and the string or <code>_</code> character, or any of the following characters for the cases below.</p>
+<p>Named I/O identifiers may be followed by a <code>:</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits, which denotes the width of the declaration or the reference.</p>
+<p>Alternatively, named I/O identifiers may be followed by a <code>+</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits, which denotes a 1-wide reference at the given offset.</p>
+<p>Floating I/O identifiers may be followed by a <code>:</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits, which denotes the width of the reference. They are used in <a href="dev/langref.html#concat">concatenations</a> to declare a partial connection to an I/O port.</p>
+<h3 id="cell"><a class="header" href="#cell">Cell identifiers</a></h3>
+<pre><code>%&lt;index&gt;
+%&lt;index&gt;:&lt;width&gt;
+%&lt;index&gt;+&lt;offset&gt;
+%&lt;index&gt;+&lt;offset&gt;:&lt;width&gt;
+%&lt;index&gt;:_
+</code></pre>
+<p>For example:</p>
+<pre><code>%0
+%1:4
+%1+0
+%1+2:2
+%2:0
+%3:_
+</code></pre>
+<p><em>Cell identifiers</em> start with a <code>%</code> sigil followed by a non-empty sequence of <code>0</code>..<code>9</code> digits, optionally followed by a <code>+</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits (denoting an offset into the wide output of a cell), optionally followed by a <code>:</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits (denoting the width of a cell declaration or reference). No whitespace is allowed between any of the characters.</p>
+<p>A <em>placeholder</em> cell identifier starts with a <code>%</code> sigil followed by a non-empty sequence of <code>0</code>..<code>9</code> digits, a <code>:</code> character, and a <code>_</code> character. No whitespace is allowed between any of the characters. The placeholder cell identifier is only used when declaring cells with multiple outputs.</p>
+<div class="warning">
+<p>While the in-memory IR has the property that a cell with a wide output occupies a contiguous range of cell indices (i.e. that <code>%0+1</code> and <code>%1</code> always refer to the same net), the same is not true in the text IR. Instead, each unique <code>&lt;index&gt;</code> can refer to a distinct cell with an output of any width.</p>
+<p>To avoid confusion, the IR printer ensures that in references, <code>&lt;index&gt;</code> is equal to the lowest index occupied by a cell with a wide output (i.e. it will never format <code>%0+1</code> as <code>%1</code>).</p>
+</div>
+<h3 id="repeat"><a class="header" href="#repeat">Repetition</a></h3>
+<pre><code>&lt;value&gt;*&lt;count&gt;
+</code></pre>
+<p>For example:</p>
+<pre><code>X*0
+%0*4
+XXX*8
+</code></pre>
+<p><em>Repetitions</em> start with a <a href="dev/langref.html#constant">constant</a> or a <a href="dev/langref.html#cell">cell identifier</a>, followed by the <code>*</code> character and a non-empty sequence of <code>0</code>..<code>9</code> digits. No whitespace is allowed between <code>&lt;value&gt;</code>, <code>*</code>, and <code>&lt;count&gt;</code>.</p>
+<h3 id="concat"><a class="header" href="#concat">Concatenations</a></h3>
+<pre><code>[ &lt;part&gt;... ]
+</code></pre>
+<p>For example:</p>
+<pre><code>[]
+[ ]
+[&amp;"gpio":1 &amp;"gpio":0]
+[ &amp;"pin" &amp;_ ]
+[1001]
+[10 01]
+[ %0 %1:4 000 ]
+[ XXXX ]
+[ %0*4 %0:4 0*4 ]
+</code></pre>
+<p><em>Concatenations</em> are delimited by <code>[</code> and <code>]</code> characters on either end and contain zero or more parts delimited by <a href="dev/langref.html#whitespace">whitespace</a>. The first part of the concatenation in the source code order corresponds to the most significant positions of the resulting reference. The two types of concatenations are <em>I/O concatenations</em> and <em>value concatenations</em>.</p>
+<p>Each part of an I/O concatenation must be an <a href="dev/langref.html#io">I/O identifier</a>, which could be named or floating.</p>
+<p>Each part of a value concatenation must be a <a href="dev/langref.html#constant">constant</a>, a <a href="dev/langref.html#cell">cell identifier</a>, or a <a href="dev/langref.html#repeat">repetition</a>.</p>
+<h3 id="special"><a class="header" href="#special">Other special characters</a></h3>
+<p>Special characters <code>[</code>, <code>]</code>, <code>(</code>, <code>)</code>, <code>{</code>, <code>}</code>, <code>=</code>, and <code>,</code> are used as delimiters within <a href="dev/langref.html#decls">declarations</a>.</p>
+<p>These characters may be optionally surrounded by the <a href="dev/langref.html#whitespace">whitespace</a> characters <code>U+0020 SPACE</code> and <code>U+0009 CHARACTER TABULATION</code> without altering their meaning. In addition, the <a href="dev/langref.html#whitespace">whitespace</a> character <code>U+000A LINE FEED</code> may appear between the matching <code>[</code>, <code>]</code>, <code>(</code>, <code>)</code>, <code>{</code>, or <code>}</code> delimiter pairs, in which case it does not indicate the end of the syntactic construct.</p>
+<h2 id="header"><a class="header" href="#header">Header</a></h2>
+<p>The header must be located at the beginning of the file, after any initial <a href="dev/langref.html#whitespace">whitespace</a> or <a href="dev/langref.html#comment">comments</a>. It describes how the remainder of the file must be interpreted.</p>
+<h3 id="target"><a class="header" href="#target">Target specification</a></h3>
+<pre><code>set target &lt;target&gt; &lt;option&gt;=&lt;value&gt;...
+</code></pre>
+<p>For example:</p>
+<pre><code>set target "siliconblue"
+set target "siliconblue" "device"="ice40hx8k"
+set target "siliconblue" "device"="ice40up5k" "dsp"="off"
+</code></pre>
+<p>The target specification defines the specific device for which the netlist is intended, as well as target-specific configuration options for the flow. The <code>&lt;target&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;value&gt;</code> are all <a href="dev/langref.html#string">strings</a> that are passed to the <a href="dev//api/prjunnamed_netlist/fn.register_target.html">builder function</a> as-is.</p>
+<h2 id="decls"><a class="header" href="#decls">Declarations</a></h2>
 <p>To be written.</p>
 
                     </main>
