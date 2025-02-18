@@ -1770,7 +1770,7 @@
                     }
                 }
             });
-            <span class="self">self</span>.cells.push(AnnotatedCell { repr: CellRepr::Coarse(Box::new(Cell::Debug(name, value))), meta });
+            <span class="self">self</span>.cells.push(AnnotatedCell { repr: CellRepr::Boxed(Box::new(Cell::Debug(name, value))), meta });
         }
 
         did_change
@@ -1779,46 +1779,46 @@
     <span class="kw">pub fn </span>statistics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BTreeMap&lt;String, usize&gt; {
         <span class="kw">let </span>result = RefCell::new(BTreeMap::&lt;String, usize&gt;::new());
         <span class="kw">for </span>cell_ref <span class="kw">in </span><span class="self">self</span>.iter_cells() {
-            <span class="kw">let </span>fine = |name: <span class="kw-2">&amp;</span>str, amount: usize| {
+            <span class="kw">let </span>bitwise = |name: <span class="kw-2">&amp;</span>str, amount: usize| {
                 <span class="kw-2">*</span>result.borrow_mut().entry(<span class="macro">format!</span>(<span class="string">"{name}"</span>)).or_default() += amount;
             };
-            <span class="kw">let </span>coarse = |name: <span class="kw-2">&amp;</span>str, size: usize| {
+            <span class="kw">let </span>wide = |name: <span class="kw-2">&amp;</span>str, size: usize| {
                 <span class="kw-2">*</span>result.borrow_mut().entry(<span class="macro">format!</span>(<span class="string">"{name}:{size}"</span>)).or_default() += <span class="number">1</span>;
             };
             <span class="kw">let </span>custom = |args: std::fmt::Arguments| {
                 <span class="kw-2">*</span>result.borrow_mut().entry(<span class="macro">format!</span>(<span class="string">"{args}"</span>)).or_default() += <span class="number">1</span>;
             };
             <span class="kw">match </span><span class="kw-2">&amp;*</span>cell_ref.get() {
-                Cell::Buf(arg) =&gt; fine(<span class="string">"buf"</span>, arg.len()),
-                Cell::Not(arg) =&gt; fine(<span class="string">"not"</span>, arg.len()),
-                Cell::And(arg, <span class="kw">_</span>) =&gt; fine(<span class="string">"and"</span>, arg.len()),
-                Cell::Or(arg, <span class="kw">_</span>) =&gt; fine(<span class="string">"or"</span>, arg.len()),
-                Cell::Xor(arg, <span class="kw">_</span>) =&gt; fine(<span class="string">"xor"</span>, arg.len()),
-                Cell::Mux(<span class="kw">_</span>, arg, <span class="kw">_</span>) =&gt; fine(<span class="string">"mux"</span>, arg.len()),
-                Cell::Adc(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; coarse(<span class="string">"adc"</span>, arg.len()),
-                Cell::Eq(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"eq"</span>, arg.len()),
-                Cell::ULt(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"ult"</span>, arg.len()),
-                Cell::SLt(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"slt"</span>, arg.len()),
-                Cell::Shl(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; coarse(<span class="string">"shl"</span>, arg.len()),
-                Cell::UShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; coarse(<span class="string">"ushr"</span>, arg.len()),
-                Cell::SShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; coarse(<span class="string">"sshr"</span>, arg.len()),
-                Cell::XShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; coarse(<span class="string">"xshr"</span>, arg.len()),
-                Cell::Mul(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"mul"</span>, arg.len()),
-                Cell::UDiv(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"udiv"</span>, arg.len()),
-                Cell::UMod(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"umod"</span>, arg.len()),
-                Cell::SDivTrunc(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"sdiv_trunc"</span>, arg.len()),
-                Cell::SDivFloor(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"sdiv_floor"</span>, arg.len()),
-                Cell::SModTrunc(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"smod_trunc"</span>, arg.len()),
-                Cell::SModFloor(arg, <span class="kw">_</span>) =&gt; coarse(<span class="string">"smod_floor"</span>, arg.len()),
+                Cell::Buf(arg) =&gt; bitwise(<span class="string">"buf"</span>, arg.len()),
+                Cell::Not(arg) =&gt; bitwise(<span class="string">"not"</span>, arg.len()),
+                Cell::And(arg, <span class="kw">_</span>) =&gt; bitwise(<span class="string">"and"</span>, arg.len()),
+                Cell::Or(arg, <span class="kw">_</span>) =&gt; bitwise(<span class="string">"or"</span>, arg.len()),
+                Cell::Xor(arg, <span class="kw">_</span>) =&gt; bitwise(<span class="string">"xor"</span>, arg.len()),
+                Cell::Mux(<span class="kw">_</span>, arg, <span class="kw">_</span>) =&gt; bitwise(<span class="string">"mux"</span>, arg.len()),
+                Cell::Adc(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; wide(<span class="string">"adc"</span>, arg.len()),
+                Cell::Eq(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"eq"</span>, arg.len()),
+                Cell::ULt(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"ult"</span>, arg.len()),
+                Cell::SLt(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"slt"</span>, arg.len()),
+                Cell::Shl(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; wide(<span class="string">"shl"</span>, arg.len()),
+                Cell::UShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; wide(<span class="string">"ushr"</span>, arg.len()),
+                Cell::SShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; wide(<span class="string">"sshr"</span>, arg.len()),
+                Cell::XShr(arg, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; wide(<span class="string">"xshr"</span>, arg.len()),
+                Cell::Mul(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"mul"</span>, arg.len()),
+                Cell::UDiv(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"udiv"</span>, arg.len()),
+                Cell::UMod(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"umod"</span>, arg.len()),
+                Cell::SDivTrunc(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"sdiv_trunc"</span>, arg.len()),
+                Cell::SDivFloor(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"sdiv_floor"</span>, arg.len()),
+                Cell::SModTrunc(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"smod_trunc"</span>, arg.len()),
+                Cell::SModFloor(arg, <span class="kw">_</span>) =&gt; wide(<span class="string">"smod_floor"</span>, arg.len()),
                 Cell::Match(<span class="kw">_</span>) =&gt; custom(<span class="macro">format_args!</span>(<span class="string">"match"</span>)),
-                Cell::Assign(AssignCell { value, .. }) =&gt; fine(<span class="string">"assign"</span>, value.len()),
-                Cell::Dff(FlipFlop { data, .. }) =&gt; fine(<span class="string">"dff"</span>, data.len()),
+                Cell::Assign(AssignCell { value, .. }) =&gt; bitwise(<span class="string">"assign"</span>, value.len()),
+                Cell::Dff(FlipFlop { data, .. }) =&gt; bitwise(<span class="string">"dff"</span>, data.len()),
                 Cell::Memory(Memory { depth, width, .. }) =&gt; custom(<span class="macro">format_args!</span>(<span class="string">"memory:{depth}:{width}"</span>)),
-                Cell::IoBuf(IoBuffer { io, .. }) =&gt; fine(<span class="string">"iobuf"</span>, io.len()),
+                Cell::IoBuf(IoBuffer { io, .. }) =&gt; bitwise(<span class="string">"iobuf"</span>, io.len()),
                 Cell::Target(TargetCell { kind, .. }) =&gt; custom(<span class="macro">format_args!</span>(<span class="string">"{kind}"</span>)),
                 Cell::Other(Instance { kind, .. }) =&gt; custom(<span class="macro">format_args!</span>(<span class="string">"{kind}"</span>)),
-                Cell::Input(<span class="kw">_</span>, width) =&gt; fine(<span class="string">"input"</span>, <span class="kw-2">*</span>width),
-                Cell::Output(<span class="kw">_</span>, value) =&gt; fine(<span class="string">"output"</span>, value.len()),
+                Cell::Input(<span class="kw">_</span>, width) =&gt; bitwise(<span class="string">"input"</span>, <span class="kw-2">*</span>width),
+                Cell::Output(<span class="kw">_</span>, value) =&gt; bitwise(<span class="string">"output"</span>, value.len()),
                 Cell::Name(..) | Cell::Debug(..) =&gt; (),
             }
         }

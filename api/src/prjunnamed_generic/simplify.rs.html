@@ -1676,7 +1676,7 @@
     <span class="kw">for </span>cell_ref <span class="kw">in </span>design.iter_cells() {
         <span class="comment">// Fold inverters into controls first. This only ever replaces the cells themselves.
         </span>fold_controls(design, cell_ref);
-        <span class="comment">// Fine rules are more powerful, but some rules are coarse-only.
+        <span class="comment">// Rules that match individual bits of a cell are more powerful, but some rules must match an entire cell.
         </span><span class="kw">let </span>value = cell_ref.output();
         <span class="kw">if </span>rules(design, <span class="kw-2">&amp;</span>value) {
             <span class="kw">continue</span>;

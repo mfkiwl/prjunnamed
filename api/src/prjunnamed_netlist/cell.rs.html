@@ -592,7 +592,7 @@
     Mux(Net, Net, Net), <span class="comment">// a ? b : c
     </span>Adc(Net, Net, Net), <span class="comment">// a + b + ci
 
-    </span>Coarse(Box&lt;Cell&gt;),
+    </span>Boxed(Box&lt;Cell&gt;),
 }
 
 <span class="doccomment">/// A unit of logic.
@@ -871,7 +871,7 @@
             CellRepr::Mux(arg1, arg2, arg3) =&gt; Cow::Owned(Cell::Mux(arg1, Value::from(arg2), Value::from(arg3))),
             CellRepr::Adc(arg1, arg2, arg3) =&gt; Cow::Owned(Cell::Adc(Value::from(arg1), Value::from(arg2), arg3)),
 
-            CellRepr::Coarse(<span class="kw-2">ref </span>coarse) =&gt; Cow::Borrowed(coarse),
+            CellRepr::Boxed(<span class="kw-2">ref </span>cell) =&gt; Cow::Borrowed(cell),
         }
     }
 }
@@ -887,7 +887,7 @@
             Cell::Mux(arg1, arg2, arg3) <span class="kw">if </span>arg2.len() == <span class="number">1 </span>&amp;&amp; arg3.len() == <span class="number">1 </span>=&gt; CellRepr::Mux(arg1, arg2[<span class="number">0</span>], arg3[<span class="number">0</span>]),
             Cell::Adc(arg1, arg2, arg3) <span class="kw">if </span>arg1.len() == <span class="number">1 </span>&amp;&amp; arg2.len() == <span class="number">1 </span>=&gt; CellRepr::Adc(arg1[<span class="number">0</span>], arg2[<span class="number">0</span>], arg3),
 
-            coarse =&gt; CellRepr::Coarse(Box::new(coarse)),
+            cell =&gt; CellRepr::Boxed(Box::new(cell)),
         }
     }
 }
@@ -906,7 +906,7 @@
             | CellRepr::Mux(..) =&gt; <span class="number">1</span>,
             CellRepr::Adc(..) =&gt; <span class="number">2</span>,
 
-            CellRepr::Coarse(coarse) =&gt; coarse.output_len(),
+            CellRepr::Boxed(cell) =&gt; cell.output_len(),
         }
     }
 
@@ -926,7 +926,7 @@
                 arg3.visit(<span class="kw-2">&amp;mut </span>f);
             }
 
-            CellRepr::Coarse(coarse) =&gt; coarse.visit(<span class="kw-2">&amp;mut </span>f),
+            CellRepr::Boxed(cell) =&gt; cell.visit(<span class="kw-2">&amp;mut </span>f),
         }
     }
 
@@ -946,7 +946,7 @@
                 arg3.visit_mut(<span class="kw-2">&amp;mut </span>f);
             }
 
-            CellRepr::Coarse(coarse) =&gt; coarse.visit_mut(<span class="kw-2">&amp;mut </span>f),
+            CellRepr::Boxed(cell) =&gt; cell.visit_mut(<span class="kw-2">&amp;mut </span>f),
         }
     }
 }
