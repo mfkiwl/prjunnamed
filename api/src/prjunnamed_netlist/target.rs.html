@@ -617,13 +617,13 @@
                 <span class="number">0 </span>=&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::zero(<span class="number">1</span>))),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
-            (TargetParamKind::Bool, ParamValue::Const(value)) =&gt; <span class="kw">match </span>value.as_uint() {
-                <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::ones(<span class="number">1</span>))),
-                <span class="prelude-val">Some</span>(<span class="number">0</span>) =&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::zero(<span class="number">1</span>))),
+            (TargetParamKind::Bool, ParamValue::Const(value)) =&gt; <span class="kw">match </span>value.try_into() {
+                <span class="prelude-val">Ok</span>(<span class="number">0u64</span>) =&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::zero(<span class="number">1</span>))),
+                <span class="prelude-val">Ok</span>(<span class="number">1u64</span>) =&gt; <span class="prelude-val">Some</span>(ParamValue::Const(Const::ones(<span class="number">1</span>))),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             (TargetParamKind::IntEnum(items), ParamValue::Const(value)) =&gt; {
-                <span class="kw">let </span>value = value.as_int()<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = value.try_into().ok()<span class="question-mark">?</span>;
                 <span class="kw">if </span>items.contains(<span class="kw-2">&amp;</span>value) {
                     <span class="prelude-val">Some</span>(ParamValue::Int(value))
                 } <span class="kw">else </span>{

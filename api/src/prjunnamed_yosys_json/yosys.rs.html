@@ -934,9 +934,9 @@
 
     <span class="kw">pub fn </span>as_bool(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, MetadataTypeError&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Const(value) =&gt; <span class="kw">match </span>value.as_uint() {
-                <span class="prelude-val">Some</span>(<span class="number">0</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+            <span class="self">Self</span>::Const(value) =&gt; <span class="kw">match </span>value.try_into() {
+                <span class="prelude-val">Ok</span>(<span class="number">0u64</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                <span class="prelude-val">Ok</span>(<span class="number">1u64</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(MetadataTypeError),
             },
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(MetadataTypeError),

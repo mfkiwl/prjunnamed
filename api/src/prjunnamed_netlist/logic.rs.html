@@ -612,7 +612,15 @@
 <a href="#611" id="611">611</a>
 <a href="#612" id="612">612</a>
 <a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     borrow::Cow,
     fmt::{Debug, Display},
     ops::{Index, IndexMut},
@@ -820,46 +828,6 @@
             trits.push(trit);
         }
         <span class="self">Self </span>{ trits }
-    }
-
-    <span class="kw">pub fn </span>as_uint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
-        <span class="kw">if </span><span class="self">self</span>.has_undef() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="number">0</span>;
-        <span class="kw">for </span>(pos, trit) <span class="kw">in </span><span class="self">self</span>.iter().enumerate() {
-            <span class="kw">if </span>trit == Trit::One {
-                <span class="kw">if </span>pos &gt;= <span class="number">64 </span>{
-                    <span class="kw">return </span><span class="prelude-val">None</span>;
-                }
-                res |= <span class="number">1 </span>&lt;&lt; pos;
-            }
-        }
-        <span class="prelude-val">Some</span>(res)
-    }
-
-    <span class="kw">pub fn </span>as_int(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
-        <span class="kw">if </span><span class="self">self</span>.has_undef() {
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>width = <span class="self">self</span>.len();
-        <span class="kw">while </span>width &gt; <span class="number">1 </span>&amp;&amp; <span class="self">self</span>[width - <span class="number">1</span>] == <span class="self">self</span>[width - <span class="number">2</span>] {
-            width -= <span class="number">1</span>;
-        }
-        <span class="kw">if </span>width &gt; <span class="number">64 </span>{
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="number">0</span>;
-        <span class="kw">for </span>(pos, trit) <span class="kw">in </span><span class="self">self</span>.iter().enumerate() {
-            <span class="kw">if </span>trit == Trit::One {
-                <span class="kw">if </span>pos == width - <span class="number">1 </span>{
-                    res |= -<span class="number">1 </span>&lt;&lt; pos;
-                } <span class="kw">else </span>{
-                    res |= <span class="number">1 </span>&lt;&lt; pos;
-                }
-            }
-        }
-        <span class="prelude-val">Some</span>(res)
     }
 
     <span class="kw">pub fn </span>lit(value: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
@@ -1083,6 +1051,54 @@
             trits.push(Trit::from_char(char)<span class="question-mark">?</span>)
         }
         <span class="prelude-val">Ok</span>(Const { trits })
+    }
+}
+
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>Const&gt; <span class="kw">for </span>u64 {
+    <span class="kw">type </span>Error = ();
+
+    <span class="kw">fn </span>try_from(value: <span class="kw-2">&amp;</span>Const) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">if </span>value.has_undef() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(());
+        }
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0</span>;
+        <span class="kw">for </span>(index, trit) <span class="kw">in </span>value.iter().enumerate() {
+            <span class="kw">if </span>trit == Trit::One {
+                <span class="kw">if </span>index &gt;= <span class="number">64 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(());
+                }
+                result |= <span class="number">1 </span>&lt;&lt; index;
+            }
+        }
+        <span class="prelude-val">Ok</span>(result)
+    }
+}
+
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>Const&gt; <span class="kw">for </span>i64 {
+    <span class="kw">type </span>Error = ();
+
+    <span class="kw">fn </span>try_from(value: <span class="kw-2">&amp;</span>Const) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">if </span>value.has_undef() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(());
+        }
+        <span class="kw">let </span><span class="kw-2">mut </span>width = value.len();
+        <span class="kw">while </span>width &gt; <span class="number">1 </span>&amp;&amp; value[width - <span class="number">1</span>] == value[width - <span class="number">2</span>] {
+            width -= <span class="number">1</span>;
+        }
+        <span class="kw">if </span>width &gt; <span class="self">Self</span>::BITS <span class="kw">as </span>usize {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(());
+        }
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0</span>;
+        <span class="kw">for </span>(index, trit) <span class="kw">in </span>value.iter().enumerate() {
+            <span class="kw">if </span>trit == Trit::One {
+                <span class="kw">if </span>index == width - <span class="number">1 </span>{
+                    result |= -<span class="number">1 </span>&lt;&lt; index;
+                } <span class="kw">else </span>{
+                    result |= <span class="number">1 </span>&lt;&lt; index;
+                }
+            }
+        }
+        <span class="prelude-val">Ok</span>(result)
     }
 }
 
