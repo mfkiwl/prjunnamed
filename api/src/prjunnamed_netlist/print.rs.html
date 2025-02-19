@@ -638,7 +638,8 @@
 <a href="#637" id="637">637</a>
 <a href="#638" id="638">638</a>
 <a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt::Display};
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt::Display};
 
 <span class="kw">use crate</span>::{
     metadata::MetaItemIndex, Cell, CellRef, Const, ControlNet, Design, IoNet, IoValue, MemoryPortRelation, Net,
@@ -1149,21 +1150,22 @@
                     <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
                     port_offset += read_port.data_len;
                 }
-                <span class="kw">let </span>fully_undef_rows_at_end = memory
-                    .init_value
-                    .iter()
-                    .rev()
-                    .enumerate()
-                    .find(|(_index, trit)| !<span class="macro">matches!</span>(trit, Trit::Undef))
-                    .map(|(index, _trit)| index)
-                    .unwrap_or(memory.width * memory.depth)
-                    / memory.width;
-                <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..(memory.depth - fully_undef_rows_at_end) {
-                    <span class="macro">write!</span>(f, <span class="string">"  init "</span>)<span class="question-mark">?</span>;
-                    <span class="kw">for </span>trit <span class="kw">in </span>memory.init_value[(index * memory.width)..((index + <span class="number">1</span>) * memory.width)].iter().rev() {
-                        <span class="macro">write!</span>(f, <span class="string">"{trit}"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>rows = Vec::new();
+                <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..memory.depth {
+                    rows.push(memory.init_value.slice((index * memory.width)..((index + <span class="number">1</span>) * memory.width)));
+                }
+                <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+                <span class="kw">while </span>index &lt; rows.len() {
+                    <span class="macro">write!</span>(f, <span class="string">"  init {}"</span>, rows[index])<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>repeats = <span class="number">1</span>;
+                    <span class="kw">while </span>rows.get(index) == rows.get(index + repeats) {
+                        repeats += <span class="number">1</span>;
+                    }
+                    <span class="kw">if </span>repeats &gt; <span class="number">1 </span>{
+                        <span class="macro">write!</span>(f, <span class="string">"*{repeats}"</span>)<span class="question-mark">?</span>;
                     }
                     <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
+                    index += repeats;
                 }
                 <span class="macro">write!</span>(f, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
             }

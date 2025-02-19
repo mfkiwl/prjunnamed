@@ -1082,7 +1082,12 @@
 <a href="#1081" id="1081">1081</a>
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
 
 <span class="kw">use </span>yap::{one_of, types::WithContext, IntoTokens, TokenLocation, Tokens};
 
@@ -1909,7 +1914,12 @@
     <span class="kw">fn </span>parse_memory_init(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Const&gt; {
         parse_keyword_expect(t, <span class="string">"init"</span>)<span class="question-mark">?</span>;
         parse_blank(t);
-        parse_const(t)
+        <span class="kw">let </span>value = parse_const(t)<span class="question-mark">?</span>;
+        <span class="kw">let </span>repeats = t.optional(|t| {
+            parse_symbol(t, <span class="string">'*'</span>)<span class="question-mark">?</span>;
+            parse_decimal(t)
+        }).unwrap_or(<span class="number">1</span>);
+        <span class="prelude-val">Some</span>(value.repeat(repeats))
     }
 
     <span class="kw">fn </span>parse_memory_write(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MemoryWritePort&gt; {

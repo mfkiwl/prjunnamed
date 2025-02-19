@@ -620,7 +620,11 @@
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     borrow::Cow,
     fmt::{Debug, Display},
     ops::{Index, IndexMut},
@@ -888,6 +892,10 @@
 
     <span class="kw">pub fn </span>concat&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'a</span>, Const&gt;&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::from_iter(<span class="self">self</span>.iter().chain(other.into().iter()))
+    }
+
+    <span class="kw">pub fn </span>repeat(<span class="kw-2">&amp;</span><span class="self">self</span>, count: usize) -&gt; <span class="self">Self </span>{
+        Const::from_iter((<span class="number">0</span>..count).flat_map(|<span class="kw">_</span>| <span class="self">self</span>))
     }
 
     <span class="kw">pub fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw">impl </span>std::ops::RangeBounds&lt;usize&gt;) -&gt; Const {
