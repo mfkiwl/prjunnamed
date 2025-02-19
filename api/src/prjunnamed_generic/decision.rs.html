@@ -1479,7 +1479,10 @@
 <a href="#1478" id="1478">1478</a>
 <a href="#1479" id="1479">1479</a>
 <a href="#1480" id="1480">1480</a>
-<a href="#1481" id="1481">1481</a></pre></div><pre class="rust"><code><span class="doccomment">//! Decision tree lowering.
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a></pre></div><pre class="rust"><code><span class="doccomment">//! Decision tree lowering.
 //!
 //! The `decision` pass implements decision tree lowering based on the well-known heuristic
 //! algorithm developed for ML from the paper "Tree pattern matching for ML" by Marianne Baudinet
@@ -1583,9 +1586,7 @@
     </span>}
 
     <span class="kw">fn </span>iter_outputs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Net&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>outputs: Vec&lt;Net&gt; = <span class="self">self</span>.rows.iter()
-            .flat_map(|row| row.rules.iter().copied())
-            .collect();
+        <span class="kw">let </span><span class="kw-2">mut </span>outputs: Vec&lt;Net&gt; = <span class="self">self</span>.rows.iter().flat_map(|row| row.rules.iter().copied()).collect();
         outputs.sort();
         outputs.dedup();
         outputs.into_iter()
@@ -1847,14 +1848,17 @@
 
         <span class="comment">// Whenever multiple subtrees are connected to the same one-hot output, it is not possible
         // to merge all of them into the same matrix. Turn all of these subtrees into roots.
-        </span><span class="kw">let </span>subtrees = subtrees.into_iter().filter_map(|(key, subtrees)| {
-            <span class="kw">if </span>subtrees.len() == <span class="number">1 </span>{
-                <span class="prelude-val">Some</span>((key, subtrees.into_iter().next().unwrap()))
-            } <span class="kw">else </span>{
-                roots.extend(subtrees);
-                <span class="prelude-val">None
-            </span>}
-        }).collect();
+        </span><span class="kw">let </span>subtrees = subtrees
+            .into_iter()
+            .filter_map(|(key, subtrees)| {
+                <span class="kw">if </span>subtrees.len() == <span class="number">1 </span>{
+                    <span class="prelude-val">Some</span>((key, subtrees.into_iter().next().unwrap()))
+                } <span class="kw">else </span>{
+                    roots.extend(subtrees);
+                    <span class="prelude-val">None
+                </span>}
+            })
+            .collect();
 
         <span class="self">Self </span>{ design, roots, subtrees }
     }
@@ -1916,7 +1920,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>links: BTreeMap&lt;CellRef, BTreeSet&lt;CellRef&gt;&gt; = BTreeMap::new();
         <span class="kw">for </span>cell_ref <span class="kw">in </span>design.iter_cells() {
             <span class="kw">let </span>Cell::Assign(AssignCell { value, offset: <span class="number">0</span>, update, .. }) = <span class="kw-2">&amp;*</span>cell_ref.get() <span class="kw">else </span>{ <span class="kw">continue </span>};
-            <span class="kw">if </span>update.len() != value.len() { <span class="kw">continue </span>}
+            <span class="kw">if </span>update.len() != value.len() {
+                <span class="kw">continue</span>;
+            }
             <span class="kw">if let </span><span class="prelude-val">Ok</span>((value_cell_ref, _offset)) = design.find_cell(value[<span class="number">0</span>]) {
                 <span class="kw">if </span>value_cell_ref.output() == <span class="kw-2">*</span>value {
                     <span class="kw">if let </span>Cell::Assign(<span class="kw">_</span>) = <span class="kw-2">&amp;*</span>value_cell_ref.get() {
@@ -1964,8 +1970,8 @@
                 <span class="kw">let </span>other_decision = decisions.get(<span class="kw-2">&amp;</span>enable_of(other_cell))<span class="question-mark">?</span>;
                 <span class="kw">if </span>!Rc::ptr_eq(decision, other_decision) {
                     end_index = index;
-                    <span class="kw">break </span><span class="lifetime">'chain
-                </span>}
+                    <span class="kw">break </span><span class="lifetime">'chain</span>;
+                }
             }
             <span class="kw">let </span>chain = <span class="kw-2">&amp;</span>chain[..end_index];
 

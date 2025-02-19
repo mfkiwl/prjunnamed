@@ -126,7 +126,9 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     cell::{Ref, RefCell},
     fmt::{Debug, Display},
 };
@@ -211,7 +213,8 @@
 }
 
 <span class="kw">impl </span>DesignDyn <span class="kw">for </span>Design {
-    <span class="kw">fn </span>find_cell(<span class="kw-2">&amp;</span><span class="self">self</span>, net: Net) -&gt; <span class="prelude-ty">Result</span>&lt;(CellRef, usize), Trit&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>find_cell(<span class="kw-2">&amp;</span><span class="self">self</span>, net: Net) -&gt; <span class="prelude-ty">Result</span>&lt;(CellRef, usize), Trit&gt; {
         Design::find_cell(<span class="self">self</span>, net)
     }
 
@@ -240,7 +243,8 @@
 }
 
 <span class="kw">impl </span>DesignDyn <span class="kw">for </span>CellCollector&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="kw">fn </span>find_cell(<span class="kw-2">&amp;</span><span class="self">self</span>, net: Net) -&gt; <span class="prelude-ty">Result</span>&lt;(CellRef, usize), Trit&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>find_cell(<span class="kw-2">&amp;</span><span class="self">self</span>, net: Net) -&gt; <span class="prelude-ty">Result</span>&lt;(CellRef, usize), Trit&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.find_cell(net) {
             <span class="prelude-val">Ok</span>((cell_ref, offset)) =&gt; {
                 <span class="self">self</span>.cells.borrow_mut().push(cell_ref);

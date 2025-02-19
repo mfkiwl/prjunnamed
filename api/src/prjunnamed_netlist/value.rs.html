@@ -906,7 +906,7 @@
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
             (ValueRepr::Some(lft), ValueRepr::Some(rgt)) =&gt; lft.eq(rgt),
-            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().eq(other.as_slice())
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().eq(other.as_slice()),
         }
     }
 }
@@ -917,7 +917,7 @@
     <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
             (ValueRepr::Some(lft), ValueRepr::Some(rgt)) =&gt; lft.partial_cmp(rgt),
-            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().partial_cmp(other.as_slice())
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().partial_cmp(other.as_slice()),
         }
     }
 }
@@ -926,7 +926,7 @@
     <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
             (ValueRepr::Some(lft), ValueRepr::Some(rgt)) =&gt; lft.cmp(rgt),
-            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().cmp(other.as_slice())
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.as_slice().cmp(other.as_slice()),
         }
     }
 }
