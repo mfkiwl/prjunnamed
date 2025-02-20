@@ -1904,12 +1904,12 @@
         <span class="kw">for </span>(name, io_value) <span class="kw">in </span><span class="self">self</span>.iter_ios() {
             <span class="macro">write!</span>(f, <span class="string">"{}&amp;"</span>, <span class="kw">if </span>!diff { <span class="string">"" </span>} <span class="kw">else </span>{ unchanged })<span class="question-mark">?</span>;
             <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(f, <span class="string">":{}"</span>, io_value.len())<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">":{} = io"</span>, io_value.len())<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>(name, io_value) <span class="kw">in </span><span class="kw-2">&amp;</span>changes.added_ios {
             <span class="macro">write!</span>(f, <span class="string">"{added}&amp;"</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(f, <span class="string">":{}"</span>, io_value.len())<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">":{} = io"</span>, io_value.len())<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span>write_cell = |f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, index: usize, cell: <span class="kw-2">&amp;</span>Cell, metadata: MetaItemIndex| {

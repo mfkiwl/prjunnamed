@@ -324,6 +324,18 @@ XXX*8
 <p><em>Concatenations</em> are delimited by <code>[</code> and <code>]</code> characters on either end and contain zero or more parts delimited by <a href="dev/langref.html#whitespace">whitespace</a>. The first part of the concatenation in the source code order corresponds to the most significant positions of the resulting reference. The two types of concatenations are <em>I/O concatenations</em> and <em>value concatenations</em>.</p>
 <p>Each part of an I/O concatenation must be an <a href="dev/langref.html#io">I/O identifier</a>, which could be named or floating.</p>
 <p>Each part of a value concatenation must be a <a href="dev/langref.html#constant">constant</a>, a <a href="dev/langref.html#cell">cell identifier</a>, or a <a href="dev/langref.html#repeat">repetition</a>.</p>
+<h3 id="value"><a class="header" href="#value">Value references</a></h3>
+<p>For example:</p>
+<pre><code>0
+1010
+XXX
+[ 10 %5 ]
+%5:10
+%1*10
+[]
+</code></pre>
+<p><em>Value references</em> are used as operands within <a href="dev/langref.html#cell-decls">cell declarations</a>. A value reference must be a <a href="dev/langref.html#constant">constant</a>, a <a href="dev/langref.html#cell">cell identifier</a>, a <a href="dev/langref.html#concat">concatenation</a>, or a <a href="dev/langref.html#repeat">repetition</a>.</p>
+<p>The width of a value reference can be determined solely from its syntax.</p>
 <h3 id="special"><a class="header" href="#special">Other special characters</a></h3>
 <p>Special characters <code>[</code>, <code>]</code>, <code>(</code>, <code>)</code>, <code>{</code>, <code>}</code>, <code>=</code>, and <code>,</code> are used as delimiters within <a href="dev/langref.html#decls">declarations</a>.</p>
 <p>These characters may be optionally surrounded by the <a href="dev/langref.html#whitespace">whitespace</a> characters <code>U+0020 SPACE</code> and <code>U+0009 CHARACTER TABULATION</code> without altering their meaning. In addition, the <a href="dev/langref.html#whitespace">whitespace</a> character <code>U+000A LINE FEED</code> may appear between the matching <code>[</code>, <code>]</code>, <code>(</code>, <code>)</code>, <code>{</code>, or <code>}</code> delimiter pairs, in which case it does not indicate the end of the syntactic construct.</p>
@@ -339,7 +351,12 @@ set target "siliconblue" "device"="ice40up5k" "dsp"="off"
 </code></pre>
 <p>The target specification defines the specific device for which the netlist is intended, as well as target-specific configuration options for the flow. The <code>&lt;target&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;value&gt;</code> are all <a href="dev/langref.html#string">strings</a> that are passed to the <a href="dev//api/prjunnamed_netlist/fn.register_target.html">builder function</a> as-is.</p>
 <h2 id="decls"><a class="header" href="#decls">Declarations</a></h2>
-<p><em>Declarations</em> are syntactic constructs that, taken together, describe the entire netlist. There are two kinds of declarations: <em>metadata declarations</em> and <em>cell declarations</em>.</p>
+<p><em>Declarations</em> are syntactic constructs that, taken together, describe the entire netlist. There are several kinds of declarations:</p>
+<ul>
+<li><a href="dev/langref.html#metadata-decls"><em>metadata declarations</em></a>,</li>
+<li><a href="dev/langref.html#io-decls"><em>I/O declarations</em></a>,</li>
+<li><a href="dev/langref.html#cell-decls"><em>cell declarations</em></a>.</li>
+</ul>
 <p>The general structure of a declaration is:</p>
 <pre><code>&lt;ident&gt; = &lt;keyword&gt; &lt;operand&gt;...
 </code></pre>
@@ -413,6 +430,15 @@ set target "siliconblue" "device"="ice40up5k" "dsp"="off"
 <p><em>Attribute metadata</em> is used to encapsulate source-level attributes that are not otherwise recognized by the target-independent or target-specific parts of the flow. An attribute has a <code>"&lt;name&gt;"</code> <a href="dev/langref.html#string">string</a> and a payload. There are three possible types of payloads: <a href="dev/langref.html#constant">constants</a>, <a href="dev/langref.html#decimal">integers</a>, and <a href="dev/langref.html#string">strings</a>.</p>
 <p>Attribute metadata is strongly typed: the tools preserve the type of the payload and ensure it matches the expected type whenever the payload is examined.</p>
 <p>If the <code>"&lt;name&gt;"</code> is empty, the declaration is ill-formed.</p>
+<h3 id="io-decls"><a class="header" href="#io-decls">I/O declarations</a></h3>
+<pre><code>&amp;"&lt;name&gt;":&lt;width&gt; = io
+</code></pre>
+<p>For example:</p>
+<pre><code>&amp;"clk":1 = io
+&amp;"gpio":8 = io
+</code></pre>
+<p><em>I/O declarations</em> are used to specify the width of an I/O port (using an <a href="dev/langref.html#io">I/O identifier</a> in the form specified above).</p>
+<p>If the <code>"&lt;name&gt;"</code> is empty, or a preceding I/O declaration uses the same <code>"&lt;name&gt;"</code>, the declaration is ill-formed.</p>
 <h3 id="cell-decls"><a class="header" href="#cell-decls">Cell declarations</a></h3>
 <p>Cell declarations correspond to the <a href="dev//api/prjunnamed_netlist/enum.Cell.html">enum prjunnamed_netlist::Cell</a>.</p>
 <p>To be written.</p>
