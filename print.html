@@ -342,12 +342,12 @@ XXX
 <h2 id="header"><a class="header" href="#header">Header</a></h2>
 <p>The header must be located at the beginning of the file, after any initial <a href="dev/langref.html#whitespace">whitespace</a> or <a href="dev/langref.html#comment">comments</a>. It describes how the remainder of the file must be interpreted.</p>
 <h3 id="target"><a class="header" href="#target">Target specification</a></h3>
-<pre><code>set target &lt;target&gt; &lt;option&gt;=&lt;value&gt;...
+<pre><code>target &lt;target&gt; &lt;option&gt;=&lt;value&gt;...
 </code></pre>
 <p>For example:</p>
-<pre><code>set target "siliconblue"
-set target "siliconblue" "device"="ice40hx8k"
-set target "siliconblue" "device"="ice40up5k" "dsp"="off"
+<pre><code>target "siliconblue"
+target "siliconblue" "device"="ice40hx8k"
+target "siliconblue" "device"="ice40up5k" "dsp"="off"
 </code></pre>
 <p>The target specification defines the specific device for which the netlist is intended, as well as target-specific configuration options for the flow. The <code>&lt;target&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;value&gt;</code> are all <a href="dev/langref.html#string">strings</a> that are passed to the <a href="dev//api/prjunnamed_netlist/fn.register_target.html">builder function</a> as-is.</p>
 <h2 id="decls"><a class="header" href="#decls">Declarations</a></h2>

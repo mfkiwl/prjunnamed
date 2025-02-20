@@ -1839,7 +1839,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = <span class="self">self</span>.target() {
-            <span class="macro">write!</span>(f, <span class="string">"{}set target "</span>, <span class="kw">if </span>!diff { <span class="string">"" </span>} <span class="kw">else </span>{ unchanged })<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">"{}target "</span>, <span class="kw">if </span>!diff { <span class="string">"" </span>} <span class="kw">else </span>{ unchanged })<span class="question-mark">?</span>;
             <span class="self">self</span>.write_string(f, target.name())<span class="question-mark">?</span>;
             <span class="kw">for </span>(name, value) <span class="kw">in </span>target.options() {
                 <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;

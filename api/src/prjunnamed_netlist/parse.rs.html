@@ -1088,9 +1088,7 @@
 <a href="#1087" id="1087">1087</a>
 <a href="#1088" id="1088">1088</a>
 <a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
+<a href="#1090" id="1090">1090</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
 
 <span class="kw">use </span>yap::{one_of, types::WithContext, IntoTokens, TokenLocation, Tokens};
 
@@ -1446,8 +1444,6 @@
 }
 
 <span class="kw">fn </span>parse_target(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
-    parse_keyword_expect(t, <span class="string">"set"</span>)<span class="question-mark">?</span>;
-    parse_blank(t);
     parse_keyword_expect(t, <span class="string">"target"</span>)<span class="question-mark">?</span>;
     parse_blank(t);
     <span class="kw">let </span>name = parse_string(t)<span class="question-mark">?</span>;
