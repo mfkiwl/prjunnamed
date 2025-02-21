@@ -632,18 +632,11 @@
 <a href="#631" id="631">631</a>
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt::Display};
+<a href="#634" id="634">634</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt::Display};
 
 <span class="kw">use crate</span>::{
     metadata::MetaItemIndex, Cell, CellRef, Const, ControlNet, Design, IoNet, IoValue, MemoryPortRelation, Net,
-    ParamValue, TargetOutput, Trit, Value,
+    TargetOutput, Trit, Value,
 };
 
 <span class="kw">struct </span>DisplayFn&lt;<span class="lifetime">'a</span>, F: <span class="kw">for</span>&lt;<span class="lifetime">'b</span>&gt; Fn(<span class="kw-2">&amp;</span>Design, <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'b</span>&gt;) -&gt; std::fmt::Result&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Design, F);
@@ -705,7 +698,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_string(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, str: <span class="kw-2">&amp;</span>str) -&gt; std::fmt::Result {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_string(f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, str: <span class="kw-2">&amp;</span>str) -&gt; std::fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"\""</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>byte <span class="kw">in </span>str.as_bytes() {
             <span class="kw">if </span>(byte.is_ascii_graphic() || <span class="macro">matches!</span>(byte, <span class="string">b' ' </span>| <span class="string">b'\t'</span>)) &amp;&amp; ![<span class="string">b'\\'</span>, <span class="string">b'"'</span>].contains(byte) {
@@ -726,7 +719,7 @@
             <span class="macro">write!</span>(f, <span class="string">"&amp;"</span>)<span class="question-mark">?</span>;
             <span class="kw">match </span><span class="self">self</span>.find_io(io_net) {
                 <span class="prelude-val">Some</span>((name, offset)) =&gt; {
-                    <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                    Design::write_string(f, name)<span class="question-mark">?</span>;
                     <span class="kw">if </span><span class="self">self</span>.get_io(name).unwrap().len() &gt; <span class="number">1 </span>{
                         <span class="macro">write!</span>(f, <span class="string">"+{}"</span>, offset)<span class="question-mark">?</span>;
                     }
@@ -748,7 +741,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>((name, _offset)) = <span class="self">self</span>.find_io(io_value[<span class="number">0</span>]) {
                 <span class="kw">if </span><span class="self">self</span>.get_io(name).unwrap() == <span class="kw-2">*</span>io_value {
                     <span class="macro">write!</span>(f, <span class="string">"&amp;"</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                    Design::write_string(f, name)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(f, <span class="string">":{}"</span>, io_value.len())<span class="question-mark">?</span>;
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
@@ -778,6 +771,13 @@
             }
             <span class="prelude-val">Err</span>(trit) =&gt; <span class="macro">write!</span>(f, <span class="string">"{trit}"</span>),
         }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_control_net(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, control_net: ControlNet) -&gt; std::fmt::Result {
+        <span class="kw">if </span>control_net.is_negative() {
+            <span class="macro">write!</span>(f, <span class="string">"!"</span>)<span class="question-mark">?</span>;
+        };
+        <span class="self">self</span>.write_net(f, control_net.net())
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_value(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, value: <span class="kw-2">&amp;</span>Value) -&gt; std::fmt::Result {
@@ -880,15 +880,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_param_value(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, value: <span class="kw-2">&amp;</span>ParamValue) -&gt; std::fmt::Result {
-        <span class="kw">match </span>value {
-            ParamValue::Const(value) =&gt; <span class="macro">write!</span>(f, <span class="string">"{value}"</span>),
-            ParamValue::Int(value) =&gt; <span class="macro">write!</span>(f, <span class="string">"#{value}"</span>),
-            ParamValue::Float(_value) =&gt; <span class="macro">unimplemented!</span>(<span class="string">"float parameter"</span>),
-            ParamValue::String(value) =&gt; <span class="self">self</span>.write_string(f, value),
-        }
-    }
-
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_cell(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter,
@@ -907,16 +898,9 @@
             }
         };
 
-        <span class="kw">let </span>write_control_net = |f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, control_net: ControlNet| -&gt; std::fmt::Result {
-            <span class="kw">if </span>control_net.is_negative() {
-                <span class="macro">write!</span>(f, <span class="string">"!"</span>)<span class="question-mark">?</span>;
-            };
-            <span class="self">self</span>.write_net(f, control_net.net())
-        };
-
         <span class="kw">let </span>write_control = |f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, name: <span class="kw-2">&amp;</span>str, control_net: ControlNet| -&gt; std::fmt::Result {
             <span class="macro">write!</span>(f, <span class="string">"{}="</span>, name)<span class="question-mark">?</span>;
-            write_control_net(f, control_net)
+            <span class="self">self</span>.write_control_net(f, control_net)
         };
 
         <span class="kw">let </span>write_common = |f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, name: <span class="kw-2">&amp;</span>str, args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Value]| -&gt; std::fmt::Result {
@@ -940,7 +924,7 @@
 
         <span class="kw">let </span>write_cell_argument = |f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter, keyword: <span class="kw-2">&amp;</span>str, name: <span class="kw-2">&amp;</span>str| -&gt; std::fmt::Result {
             <span class="macro">write!</span>(f, <span class="string">"  {keyword} "</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+            Design::write_string(f, name)<span class="question-mark">?</span>;
             <span class="macro">write!</span>(f, <span class="string">" = "</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
         };
@@ -1177,13 +1161,12 @@
                 write_control(f, <span class="string">" en"</span>, io_buffer.enable)<span class="question-mark">?</span>;
             }
             Cell::Other(instance) =&gt; {
-                <span class="self">self</span>.write_string(f, instance.kind.as_str())<span class="question-mark">?</span>;
+                Design::write_string(f, instance.kind.as_str())<span class="question-mark">?</span>;
                 write_metadata(f)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">" {{{newline}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">for </span>(name, value) <span class="kw">in </span>instance.params.iter() {
                     write_cell_argument(f, <span class="string">"param"</span>, name)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_param_value(f, value)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(f, <span class="string">"{value}{newline}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">for </span>(name, value) <span class="kw">in </span>instance.inputs.iter() {
                     write_cell_argument(f, <span class="string">"input"</span>, name)<span class="question-mark">?</span>;
@@ -1192,7 +1175,7 @@
                 }
                 <span class="kw">for </span>(name, range) <span class="kw">in </span>instance.outputs.iter() {
                     <span class="macro">write!</span>(f, <span class="string">"  %{}:{} = output "</span>, index + range.start, range.len())<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
+                    Design::write_string(f, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">for </span>(name, value) <span class="kw">in </span>instance.ios.iter() {
@@ -1205,13 +1188,12 @@
             Cell::Target(target_cell) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"target "</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>prototype = <span class="self">self</span>.target_prototype(target_cell);
-                <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>target_cell.kind)<span class="question-mark">?</span>;
+                Design::write_string(f, <span class="kw-2">&amp;</span>target_cell.kind)<span class="question-mark">?</span>;
                 write_metadata(f)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">" {{{newline}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">for </span>(param, value) <span class="kw">in </span>prototype.params.iter().zip(target_cell.params.iter()) {
                     write_cell_argument(f, <span class="string">"param"</span>, <span class="kw-2">&amp;</span>param.name)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_param_value(f, value)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(f, <span class="string">"{value}{newline}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">for </span>target_input <span class="kw">in </span><span class="kw-2">&amp;</span>prototype.inputs {
                     write_cell_argument(f, <span class="string">"input"</span>, <span class="kw-2">&amp;</span>target_input.name)<span class="question-mark">?</span>;
@@ -1221,7 +1203,7 @@
                 <span class="kw">if </span>prototype.outputs.len() &gt; <span class="number">1 </span>{
                     <span class="kw">for </span>target_output <span class="kw">in </span><span class="kw-2">&amp;</span>prototype.outputs {
                         <span class="macro">write!</span>(f, <span class="string">"  %{}:{} = output "</span>, index + target_output.range.start, target_output.range.len())<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>target_output.name)<span class="question-mark">?</span>;
+                        Design::write_string(f, <span class="kw-2">&amp;</span>target_output.name)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(f, <span class="string">"{newline}"</span>)<span class="question-mark">?</span>;
                     }
                 }
@@ -1235,23 +1217,23 @@
 
             Cell::Input(name, _size) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"input "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                Design::write_string(f, name)<span class="question-mark">?</span>;
             }
             Cell::Output(name, value) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"output "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                Design::write_string(f, name)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_value(f, value)<span class="question-mark">?</span>;
             }
             Cell::Name(name, value) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"name "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                Design::write_string(f, name)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_value(f, value)<span class="question-mark">?</span>;
             }
             Cell::Debug(name, value) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"debug "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+                Design::write_string(f, name)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_value(f, value)<span class="question-mark">?</span>;
             }
@@ -1268,6 +1250,11 @@
         DisplayFn(<span class="self">self</span>, <span class="kw">move </span>|design: <span class="kw-2">&amp;</span>Design, f| design.write_net(f, net))
     }
 
+    <span class="kw">pub fn </span>display_control_net(<span class="kw-2">&amp;</span><span class="self">self</span>, net: <span class="kw">impl </span>Into&lt;ControlNet&gt;) -&gt; <span class="kw">impl </span>Display + <span class="lifetime">'_ </span>{
+        <span class="kw">let </span>net = net.into();
+        DisplayFn(<span class="self">self</span>, <span class="kw">move </span>|design: <span class="kw-2">&amp;</span>Design, f| design.write_control_net(f, net))
+    }
+
     <span class="kw">pub fn </span>display_value&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>: <span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, value: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'b</span>, Value&gt;&gt;) -&gt; <span class="kw">impl </span>Display + <span class="lifetime">'a </span>{
         <span class="kw">let </span>value = value.into();
         DisplayFn(<span class="self">self</span>, <span class="kw">move </span>|design: <span class="kw-2">&amp;</span>Design, f| design.write_value(f, <span class="kw-2">&amp;</span>value))
@@ -1275,7 +1262,6 @@
 
     <span class="kw">pub fn </span>display_cell&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, cell_ref: CellRef&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="kw">impl </span>Display + <span class="lifetime">'a </span>{
         DisplayFn(<span class="self">self</span>, <span class="kw">move </span>|design: <span class="kw-2">&amp;</span>Design, f| {
-            <span class="macro">write!</span>(f, <span class="string">"%{}:{} = "</span>, cell_ref.debug_index(), cell_ref.output_len())<span class="question-mark">?</span>;
             design.write_cell(f, <span class="string">""</span>, cell_ref.debug_index(), <span class="kw-2">&amp;*</span>cell_ref.get(), cell_ref.metadata().index())
         })
     }

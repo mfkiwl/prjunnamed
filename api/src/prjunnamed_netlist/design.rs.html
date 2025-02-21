@@ -997,7 +997,11 @@
 <a href="#996" id="996">996</a>
 <a href="#997" id="997">997</a>
 <a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Display;
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::ops::{Deref, Range};
 <span class="kw">use </span>std::cell::{Ref, RefCell};
 <span class="kw">use </span>std::borrow::Cow;
@@ -1466,14 +1470,19 @@
         changes.unalived_cells.insert(<span class="self">self</span>.index);
     }
 
-    <span class="comment">// Returns the same index as the one used by `Display` implementation. There is intentionally no way to retrieve
-    // a cell by its index.
+    <span class="doccomment">/// Returns the same index as the one used by `Display` implementation. There is intentionally no way to retrieve
+    /// a cell by its index.
     </span><span class="kw">pub fn </span>debug_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.index
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>metadata_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MetaItemIndex {
         <span class="self">self</span>.design.cells[<span class="self">self</span>.index].meta
+    }
+
+    <span class="doccomment">/// Returns a reference to the underlying [`Design`].
+    </span><span class="kw">pub fn </span>design(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Design {
+        <span class="self">self</span>.design
     }
 }
 
@@ -1840,12 +1849,12 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = <span class="self">self</span>.target() {
             <span class="macro">write!</span>(f, <span class="string">"{}target "</span>, <span class="kw">if </span>!diff { <span class="string">"" </span>} <span class="kw">else </span>{ unchanged })<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_string(f, target.name())<span class="question-mark">?</span>;
+            Design::write_string(f, target.name())<span class="question-mark">?</span>;
             <span class="kw">for </span>(name, value) <span class="kw">in </span>target.options() {
                 <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
+                Design::write_string(f, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(f, <span class="string">"="</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>value)<span class="question-mark">?</span>;
+                Design::write_string(f, <span class="kw-2">&amp;</span>value)<span class="question-mark">?</span>;
             }
             <span class="macro">writeln!</span>(f)<span class="question-mark">?</span>;
         }
@@ -1868,14 +1877,14 @@
                 }
                 MetaItem::Source { file, start, end } =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"source "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>file.get())<span class="question-mark">?</span>;
+                    Design::write_string(f, <span class="kw-2">&amp;</span>file.get())<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(f, <span class="string">" (#{} #{}) (#{} #{})"</span>, start.line, start.column, end.line, end.column)<span class="question-mark">?</span>;
                 }
                 MetaItem::NamedScope { name: <span class="kw">_</span>, source, parent }
                 | MetaItem::IndexedScope { index: <span class="kw">_</span>, source, parent } =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"scope "</span>)<span class="question-mark">?</span>;
                     <span class="kw">match </span>item {
-                        MetaItem::NamedScope { name, .. } =&gt; <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>,
+                        MetaItem::NamedScope { name, .. } =&gt; Design::write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>,
                         MetaItem::IndexedScope { index, .. } =&gt; <span class="macro">write!</span>(f, <span class="string">"#{index}"</span>)<span class="question-mark">?</span>,
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                     }
@@ -1888,14 +1897,13 @@
                 }
                 MetaItem::Ident { name, scope } =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"ident "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>;
+                    Design::write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(f, <span class="string">" in={}"</span>, scope.index())<span class="question-mark">?</span>;
                 }
                 MetaItem::Attr { name, value } =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"attr "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(f, <span class="string">" "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_param_value(f, <span class="kw-2">&amp;</span>value)<span class="question-mark">?</span>;
+                    Design::write_string(f, <span class="kw-2">&amp;</span>name.get())<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(f, <span class="string">" {value}"</span>)<span class="question-mark">?</span>;
                 }
             }
             <span class="macro">writeln!</span>(f)<span class="question-mark">?</span>;
@@ -1903,12 +1911,12 @@
 
         <span class="kw">for </span>(name, io_value) <span class="kw">in </span><span class="self">self</span>.iter_ios() {
             <span class="macro">write!</span>(f, <span class="string">"{}&amp;"</span>, <span class="kw">if </span>!diff { <span class="string">"" </span>} <span class="kw">else </span>{ unchanged })<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+            Design::write_string(f, name)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(f, <span class="string">":{} = io"</span>, io_value.len())<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>(name, io_value) <span class="kw">in </span><span class="kw-2">&amp;</span>changes.added_ios {
             <span class="macro">write!</span>(f, <span class="string">"{added}&amp;"</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_string(f, name)<span class="question-mark">?</span>;
+            Design::write_string(f, name)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(f, <span class="string">":{} = io"</span>, io_value.len())<span class="question-mark">?</span>;
         }
 
@@ -1944,7 +1952,7 @@
                 <span class="kw">for </span>index <span class="kw">in </span>(index..index + cell.output_len()).rev() {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>((name, offset)) = net_names.get(<span class="kw-2">&amp;</span>Net::from_cell_index(index)) {
                         <span class="macro">write!</span>(f, <span class="string">"{comment}drives "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_string(f, <span class="kw-2">&amp;*</span>name)<span class="question-mark">?</span>;
+                        Design::write_string(f, <span class="kw-2">&amp;*</span>name)<span class="question-mark">?</span>;
                         <span class="macro">writeln!</span>(f, <span class="string">"+{offset}"</span>)<span class="question-mark">?</span>;
                     }
                 }
