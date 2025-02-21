@@ -570,7 +570,7 @@
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a></pre></div><pre class="rust"><code><span class="kw">use </span>jzon::JsonValue;
-<span class="kw">use </span>std::{cell::RefCell, collections::BTreeMap, io::BufWriter};
+<span class="kw">use </span>std::{cell::RefCell, collections::BTreeMap, io::Write};
 
 <span class="kw">use </span><span class="kw">crate</span>::yosys::{<span class="self">self</span>, CellDetails, MetadataValue, NetDetails, PortDetails};
 <span class="kw">use </span>prjunnamed_netlist::{
@@ -1130,7 +1130,7 @@
 }
 
 <span class="comment">// Exporting a design to Yosys JSON can require modifying it if it has target cells that must be mapped to instances.
-</span><span class="kw">pub fn </span>export(writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>std::io::Write, designs: BTreeMap&lt;String, Design&gt;) -&gt; std::io::Result&lt;()&gt; {
+</span><span class="kw">pub fn </span>export(writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Write, designs: BTreeMap&lt;String, Design&gt;) -&gt; std::io::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>ys_modules = BTreeMap::new();
     <span class="kw">for </span>(name, design) <span class="kw">in </span>designs {
         ys_modules.insert(name, export_module(design));
@@ -1138,6 +1138,6 @@
     <span class="kw">let </span>ys_design = yosys::Design { creator: <span class="string">"prjunnamed"</span>.into(), modules: ys_modules.into() };
 
     <span class="kw">let </span>json = JsonValue::from(ys_design);
-    json.write_pretty(<span class="kw-2">&amp;mut </span>BufWriter::new(writer), <span class="comment">/*spaces=*/ </span><span class="number">4</span>)
+    json.write_pretty(writer, <span class="comment">/*spaces=*/ </span><span class="number">4</span>)
 }
 </code></pre></div></section></main></body></html>
