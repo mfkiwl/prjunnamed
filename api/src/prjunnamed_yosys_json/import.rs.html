@@ -818,14 +818,49 @@
 <a href="#817" id="817">817</a>
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{btree_map, BTreeMap, BTreeSet},
     sync::Arc,
 };
 
 <span class="kw">use </span>prjunnamed_netlist::{
     Const, ControlNet, Design, FlipFlop, Instance, IoBuffer, IoNet, IoValue, Net, ParamValue, Target, Trit, Value,
-    Memory, MemoryWritePort, MemoryReadPort, MemoryReadFlipFlop, MemoryPortRelation,
+    Memory, MemoryWritePort, MemoryReadPort, MemoryReadFlipFlop, MemoryPortRelation, WithMetadataGuard, SourcePosition,
+    MetaItem, MetaItemRef,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::yosys;
@@ -886,7 +921,7 @@
     driven_nets: BTreeSet&lt;usize&gt;,
     nets: BTreeMap&lt;usize, Net&gt;,
     init: BTreeMap&lt;usize, Trit&gt;,
-    design: Design,
+    design: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Design,
 }
 
 <span class="kw">impl </span>ModuleImporter&lt;<span class="lifetime">'_</span>&gt; {
@@ -1084,7 +1119,42 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>use_attribute_metadata&lt;<span class="lifetime">'a</span>&gt;(design: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Design, attributes: <span class="kw-2">&amp;</span>yosys::Metadata) -&gt; WithMetadataGuard&lt;<span class="lifetime">'a</span>&gt; {
+        <span class="kw">fn </span>parse_position(text: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;SourcePosition&gt; {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>((line, column)) = text.split_once(<span class="string">"."</span>) {
+                <span class="prelude-val">Some</span>(SourcePosition { line: line.parse::&lt;u32&gt;().ok()<span class="question-mark">?</span>, column: column.parse::&lt;u32&gt;().ok()<span class="question-mark">? </span>})
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Some</span>(SourcePosition { line: text.parse::&lt;u32&gt;().ok()<span class="question-mark">?</span>, column: <span class="number">0 </span>})
+            }
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>items: Vec&lt;MetaItemRef&gt; = Vec::new();
+
+        <span class="comment">// TODO: add a counter for failed src parsing, and emit warning if nonzero at the end of import
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(yosys::MetadataValue::String(string)) = attributes.get(<span class="string">"src"</span>) {
+            <span class="kw">for </span>piece <span class="kw">in </span>string.split(<span class="string">"|"</span>) {
+                <span class="kw">let </span><span class="prelude-val">Some</span>((filename, loc_text)) = piece.rsplit_once(<span class="string">":"</span>) <span class="kw">else </span>{
+                    <span class="kw">continue</span>;
+                };
+                <span class="kw">let </span>(start_text, end_text) = loc_text.split_once(<span class="string">"-"</span>).unwrap_or((loc_text, loc_text));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(start) = parse_position(start_text) <span class="kw">else </span>{
+                    <span class="kw">continue</span>;
+                };
+                <span class="kw">let </span><span class="prelude-val">Some</span>(end) = parse_position(end_text) <span class="kw">else </span>{
+                    <span class="kw">continue</span>;
+                };
+
+                <span class="kw">let </span>meta_filename = design.add_metadata_string(filename);
+                items.push(design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Source { file: meta_filename, start, end }));
+            }
+        }
+
+        design.use_metadata(MetaItemRef::from_iter(design, items))
+    }
+
     <span class="kw">fn </span>handle_cell(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cell: <span class="kw-2">&amp;</span>yosys::CellDetails) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span>_guard = ModuleImporter::use_attribute_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>.design, <span class="kw-2">&amp;</span>cell.attributes);
+
         <span class="kw">match </span><span class="kw-2">&amp;</span>cell.type_[..] {
             <span class="string">"$not" </span>| <span class="string">"$pos" </span>| <span class="string">"$neg" </span>=&gt; {
                 <span class="kw">let </span>width = cell.parameters.get(<span class="string">"Y_WIDTH"</span>).unwrap().as_i32()<span class="question-mark">? </span><span class="kw">as </span>usize;
@@ -1561,10 +1631,6 @@
             <span class="self">self</span>.design.replace_net(net, Net::UNDEF);
         }
     }
-
-    <span class="kw">fn </span>finalize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.design.compact();
-    }
 }
 
 <span class="kw">fn </span>import_module(
@@ -1578,6 +1644,8 @@
         }
     }
 
+    <span class="kw">let </span><span class="kw-2">mut </span>design = Design::with_target(target);
+
     <span class="kw">let </span><span class="kw-2">mut </span>importer = ModuleImporter {
         module,
         design_io_ports,
@@ -1585,7 +1653,7 @@
         driven_nets: BTreeSet::new(),
         nets: BTreeMap::new(),
         init: BTreeMap::new(),
-        design: Design::with_target(target),
+        design: <span class="kw-2">&amp;</span>design,
     };
 
     importer.handle_init()<span class="question-mark">?</span>;
@@ -1595,9 +1663,9 @@
         importer.handle_cell(cell)<span class="question-mark">?</span>;
     }
     importer.handle_undriven_nets();
-    importer.finalize();
+    design.compact();
 
-    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(importer.design))
+    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(design))
 }
 
 <span class="kw">fn </span>index_io_ports(design: <span class="kw-2">&amp;</span>yosys::Design) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeSet&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>str)&gt;, Error&gt; {

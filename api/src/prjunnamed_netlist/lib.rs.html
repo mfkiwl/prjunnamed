@@ -68,8 +68,8 @@
     Cell, MatchCell, AssignCell, FlipFlop, IoBuffer, Memory, MemoryWritePort, MemoryReadPort, MemoryReadFlipFlop,
     MemoryPortRelation, TargetCell, Instance,
 };
-<span class="kw">pub use </span>metadata::{MetaStringRef, MetaItem, MetaItemRef};
-<span class="kw">pub use </span>design::{Design, CellRef};
+<span class="kw">pub use </span>metadata::{MetaStringRef, MetaItem, MetaItemRef, SourcePosition};
+<span class="kw">pub use </span>design::{Design, CellRef, WithMetadataGuard};
 <span class="kw">pub use </span>parse::{parse, ParseError};
 <span class="kw">pub use </span>target::{
     Target, TargetParamKind, TargetParam, TargetInput, TargetOutput, TargetIo, TargetCellPurity, TargetPrototype,

@@ -3,8 +3,8 @@
     Set(<a class="struct" href="https://doc.rust-lang.org/1.85.0/alloc/collections/btree/set/struct.BTreeSet.html" title="struct alloc::collections::btree::set::BTreeSet">BTreeSet</a>&lt;<a class="struct" href="struct.MetaItemRef.html" title="struct prjunnamed_netlist::MetaItemRef">MetaItemRef</a>&lt;'a&gt;&gt;),
     Source {
         file: <a class="struct" href="struct.MetaStringRef.html" title="struct prjunnamed_netlist::MetaStringRef">MetaStringRef</a>&lt;'a&gt;,
-        start: Position,
-        end: Position,
+        start: <a class="struct" href="struct.SourcePosition.html" title="struct prjunnamed_netlist::SourcePosition">SourcePosition</a>,
+        end: <a class="struct" href="struct.SourcePosition.html" title="struct prjunnamed_netlist::SourcePosition">SourcePosition</a>,
     },
     NamedScope {
         name: <a class="struct" href="struct.MetaStringRef.html" title="struct prjunnamed_netlist::MetaStringRef">MetaStringRef</a>&lt;'a&gt;,
@@ -34,8 +34,8 @@ The purpose of this variant is to make collections of metadata indices take less
 A metadata set cannot contain less than two metadata items.</p>
 </div><section id="variant.Source" class="variant"><a href="#variant.Source" class="anchor">§</a><h3 class="code-header">Source</h3></section><div class="docblock"><p>Source location.</p>
 </div><div class="sub-variant" id="variant.Source.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.Source.field.file" class="section-header"><a href="#variant.Source.field.file" class="anchor field">§</a><code>file: <a class="struct" href="struct.MetaStringRef.html" title="struct prjunnamed_netlist::MetaStringRef">MetaStringRef</a>&lt;'a&gt;</code></span><div class="docblock"><p>Filename.  Must not be empty.</p>
-</div></div><div class="sub-variant-field"><span id="variant.Source.field.start" class="section-header"><a href="#variant.Source.field.start" class="anchor field">§</a><code>start: Position</code></span><div class="docblock"><p>Start of the range (inclusive).</p>
-</div></div><div class="sub-variant-field"><span id="variant.Source.field.end" class="section-header"><a href="#variant.Source.field.end" class="anchor field">§</a><code>end: Position</code></span><div class="docblock"><p>End of the range (exclusive).</p>
+</div></div><div class="sub-variant-field"><span id="variant.Source.field.start" class="section-header"><a href="#variant.Source.field.start" class="anchor field">§</a><code>start: <a class="struct" href="struct.SourcePosition.html" title="struct prjunnamed_netlist::SourcePosition">SourcePosition</a></code></span><div class="docblock"><p>Start of the range (inclusive).</p>
+</div></div><div class="sub-variant-field"><span id="variant.Source.field.end" class="section-header"><a href="#variant.Source.field.end" class="anchor field">§</a><code>end: <a class="struct" href="struct.SourcePosition.html" title="struct prjunnamed_netlist::SourcePosition">SourcePosition</a></code></span><div class="docblock"><p>End of the range (exclusive).</p>
 </div></div></div><section id="variant.NamedScope" class="variant"><a href="#variant.NamedScope" class="anchor">§</a><h3 class="code-header">NamedScope</h3></section><div class="docblock"><p>Scope identified by a name.
 A top-level named scope could be a module declaration. A named scope with a parent could be a block within
 a module.</p>

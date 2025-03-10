@@ -1088,7 +1088,9 @@
 <a href="#1087" id="1087">1087</a>
 <a href="#1088" id="1088">1088</a>
 <a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::BTreeMap, fmt::Display, ops::Range, str::FromStr, sync::Arc};
 
 <span class="kw">use </span>yap::{one_of, types::WithContext, IntoTokens, TokenLocation, Tokens};
 
@@ -1097,7 +1099,7 @@
     MatchCell, Memory, MemoryPortRelation, MemoryReadFlipFlop, MemoryReadPort, MemoryWritePort, MetaItem, Net,
     ParamValue, Target, TargetCell, Value,
 };
-<span class="kw">use </span><span class="kw">crate</span>::metadata::{MetaStringIndex, MetaItemIndex, Position};
+<span class="kw">use </span><span class="kw">crate</span>::metadata::{MetaStringIndex, MetaItemIndex, SourcePosition};
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>Context {
@@ -1465,7 +1467,7 @@
 
 <span class="kw">fn </span>parse_metadata_string(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MetaStringIndex&gt; {
     <span class="kw">let </span>string = parse_string(t)<span class="question-mark">?</span>;
-    <span class="prelude-val">Some</span>(t.context_mut().design.add_metadata_string(<span class="kw-2">&amp;</span>string))
+    <span class="prelude-val">Some</span>(t.context_mut().design.add_metadata_string(<span class="kw-2">&amp;</span>string).index())
 }
 
 <span class="kw">fn </span>parse_metadata_set(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MetaItemIndex&gt; {
@@ -1480,10 +1482,10 @@
     parse_symbol(t, <span class="string">'}'</span>)<span class="question-mark">?</span>;
     <span class="kw">let </span>ctx = t.context_mut();
     <span class="kw">let </span>items = indices.into_iter().map(|index| ctx.design.ref_metadata_item(ctx.get_meta(index))).collect();
-    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Set(items)))
+    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Set(items)).index())
 }
 
-<span class="kw">fn </span>parse_metadata_position(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Position&gt; {
+<span class="kw">fn </span>parse_metadata_position(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;SourcePosition&gt; {
     parse_symbol(t, <span class="string">'('</span>)<span class="question-mark">?</span>;
     parse_blank(t);
     <span class="kw">let </span>line = parse_integer(t)<span class="question-mark">?</span>;
@@ -1491,7 +1493,7 @@
     <span class="kw">let </span>column = parse_integer(t)<span class="question-mark">?</span>;
     parse_blank(t);
     parse_symbol(t, <span class="string">')'</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Some</span>(Position { line, column })
+    <span class="prelude-val">Some</span>(SourcePosition { line, column })
 }
 
 <span class="kw">fn </span>parse_metadata_source(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MetaItemIndex&gt; {
@@ -1504,7 +1506,7 @@
     <span class="kw">let </span>end = parse_metadata_position(t)<span class="question-mark">?</span>;
     <span class="kw">let </span>ctx = t.context_mut();
     <span class="kw">let </span>file = ctx.design.ref_metadata_string(file);
-    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Source { file, start, end }))
+    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Source { file, start, end }).index())
 }
 
 <span class="kw">fn </span>parse_metadata_scope(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MetaItemIndex&gt; {
@@ -1537,9 +1539,11 @@
     <span class="kw">match </span>scope {
         Scope::Named(name_index) =&gt; {
             <span class="kw">let </span>name = ctx.design.ref_metadata_string(name_index);
-            <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::NamedScope { name, parent, source }))
+            <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::NamedScope { name, parent, source }).index())
         }
-        Scope::Indexed(index) =&gt; <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::IndexedScope { index, parent, source })),
+        Scope::Indexed(index) =&gt; {
+            <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::IndexedScope { index, parent, source }).index())
+        }
     }
 }
 
@@ -1553,7 +1557,7 @@
     <span class="kw">let </span>ctx = t.context_mut();
     <span class="kw">let </span>name = ctx.design.ref_metadata_string(name);
     <span class="kw">let </span>scope = ctx.design.ref_metadata_item(ctx.get_meta(scope_index));
-    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Ident { name, scope }))
+    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Ident { name, scope }).index())
 }
 
 <span class="kw">fn </span>parse_metadata_attr(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;MetaItemIndex&gt; {
@@ -1564,7 +1568,7 @@
     <span class="kw">let </span>value = parse_param_value(t)<span class="question-mark">?</span>;
     <span class="kw">let </span>ctx = t.context_mut();
     <span class="kw">let </span>name = ctx.design.ref_metadata_string(name);
-    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Attr { name, value }))
+    <span class="prelude-val">Some</span>(ctx.design.add_metadata_item(<span class="kw-2">&amp;</span>MetaItem::Attr { name, value }).index())
 }
 
 <span class="kw">fn </span>parse_metadata(t: <span class="kw-2">&amp;mut </span>WithContext&lt;<span class="kw">impl </span>Tokens&lt;Item = char&gt;, Context&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
